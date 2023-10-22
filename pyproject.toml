@@ -1,19 +1,19 @@
 [tool.poetry]
 name = "valkyrie-tools"
-version = "0.1.0"
+version = "0.2.1"
 description = "Valkyrie Tools"
 authors = ["Kevin Haas <xransum@users.noreply.github.com>"]
 license = "MIT"
-readme = "README.rst"
+readme = "README.md"
 homepage = "https://github.com/xransum/valkyrie-tools"
 repository = "https://github.com/xransum/valkyrie-tools"
 documentation = "https://valkyrie-tools.readthedocs.io"
 classifiers = [
-    "Programming Language :: Python :: 3.7",
     "Programming Language :: Python :: 3.8",
     "Programming Language :: Python :: 3.9",
     "Programming Language :: Python :: 3.10",
     "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
 ]
 
 [tool.poetry.urls]
@@ -63,7 +63,7 @@ myst-parser = ">=0.16.1"
 reorder-python-imports = "^3.12.0"
 
 [tool.poetry.scripts]
-valkyrie-tools = "valkyrie_tools.__main__:main"
+valkyrie = "valkyrie_tools.__main__:main"
 
 [tool.poetry.group.dev.dependencies]
 reorder-python-imports = "^3.12.0"
