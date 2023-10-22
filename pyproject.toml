@@ -20,11 +20,12 @@ classifiers = [
 Changelog = "https://github.com/xransum/valkyrie-tools/releases"
 
 [tool.poetry.dependencies]
-python = ">=3.8"
+python = ">=3.8,<4.0"
 nox = ">=2020.8.22"
 tomlkit = ">=0.7"
 packaging = ">=20.9"
 click = ">=7.0"
+nox-poetry = "^1.0.3"
 
 
 [tool.poetry.dev-dependencies]

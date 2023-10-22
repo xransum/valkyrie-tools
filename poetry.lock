@@ -1400,6 +1400,22 @@ virtualenv = ">=14"
 tox-to-nox = ["jinja2", "tox (<4)"]
 
 [[package]]
+name = "nox-poetry"
+version = "1.0.3"
+description = "nox-poetry"
+optional = false
+python-versions = ">=3.7,<4.0"
+files = [
+    {file = "nox_poetry-1.0.3-py3-none-any.whl", hash = "sha256:a2fffeb70ae81840479e68287afe1c772bf376f70f1e92f99832a20b3c64d064"},
+    {file = "nox_poetry-1.0.3.tar.gz", hash = "sha256:dc7ecbbd812a333a0c0b558f57e5b37f7c12926cddbcecaf2264957fd373824e"},
+]
+
+[package.dependencies]
+nox = ">=2020.8.22"
+packaging = ">=20.9"
+tomlkit = ">=0.7"
+
+[[package]]
 name = "packaging"
 version = "23.2"
 description = "Core utilities for Python packages"
@@ -2689,5 +2705,5 @@ testing = ["big-O", "jaraco.functools", "jaraco.itertools", "more-itertools", "p
 
 [metadata]
 lock-version = "2.0"
-python-versions = ">=3.8"
-content-hash = "4e80cc37faaed8f2bd210fca80bb4ecd647150f3220ba72d2b9726083f41e1da"
+python-versions = ">=3.8,<4.0"
+content-hash = "65408a2884f839db112e43f156ae5ba3a3106e6bd9daaf0b2d9095936b216541"
