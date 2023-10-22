@@ -3,16 +3,23 @@ updates:
   - package-ecosystem: github-actions
     directory: "/"
     schedule:
-      interval: daily
+      interval: weekly
   - package-ecosystem: pip
     directory: "/.github/workflows"
     schedule:
-      interval: daily
+      interval: weekly
   - package-ecosystem: pip
     directory: "/docs"
     schedule:
-      interval: daily
+      interval: weekly
   - package-ecosystem: pip
     directory: "/"
     schedule:
-      interval: daily
+      interval: weekly
+    allow:
+      - dependency-type: "all"
+    versioning-strategy: lockfile-only
+    open-pull-requests-limit: 99
+    commit-message:
+      prefix: "⬆️"
+      prefix-development: "⬆️ [dev]"
