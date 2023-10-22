@@ -26,6 +26,7 @@ tomlkit = ">=0.7"
 packaging = ">=20.9"
 click = ">=7.0"
 nox-poetry = "^1.0.3"
+sphinx-click = "^5.0.1"
 
 
 [tool.poetry.dev-dependencies]
