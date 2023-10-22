@@ -9,4 +9,4 @@ def main() -> None:
 
 
 if __name__ == "__main__":
-    main(prog_name="valkyrie-tools")  # pragma: no cover
+    main(prog_name="valkyrie")  # pragma: no cover
