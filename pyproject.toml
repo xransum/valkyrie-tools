@@ -28,6 +28,9 @@ click = ">=7.0"
 nox-poetry = "^1.0.3"
 sphinx-click = "^5.0.1"
 sphinx-rtd-theme = "^1.3.0"
+pexpect = "^4.8.0"
+ipwhois = "^1.2.0"
+python-whois = "^0.8.0"
 
 [tool.poetry.dev-dependencies]
 pytest = ">=6.2.5"
@@ -63,10 +66,11 @@ myst-parser = ">=0.16.1"
 reorder-python-imports = "^3.12.0"
 
 [tool.poetry.scripts]
-valkyrie = "valkyrie_tools.__main__:main"
+valkyrie = "valkyrie_tools.valkyrie:cli"
 
 [tool.poetry.group.dev.dependencies]
 reorder-python-imports = "^3.12.0"
+pexpect = "^4.8.0"
 
 [tool.coverage.paths]
 source = ["src", "*/site-packages"]
@@ -78,6 +82,13 @@ source = ["valkyrie_tools"]
 [tool.coverage.report]
 show_missing = true
 fail_under = 100
+
+
+[tool.pytest.ini_options]
+filterwarnings = [
+    "ignore::DeprecationWarning:future.*",      # imp: in favour of importlib
+    "ignore::DeprecationWarning:ipwhois.net.*", # dns.resolver.Resolver.resolve: migration to
+]
 
 [build-system]
 requires = ["poetry-core>=1.0.0"]

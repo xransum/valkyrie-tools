@@ -1,6 +1,6 @@
 # Usage
 
 ```{eval-rst}
-.. click:: valkyrie_tools.__main__:main
+.. click:: valkyrie_tools.valkyrie:cli
    :prog: valkyrie
 ```
