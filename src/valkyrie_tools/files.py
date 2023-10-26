@@ -1,11 +1,13 @@
 """File utilities."""
 import os
 
+__all__ = [
+    "path_exists",
+    "is_binary_file",
+    "is_file_descriptor",
+    "read_file",
+]
 
-__all__ = ["path_exists",
-"is_binary_file",
-"is_file_descriptor",
-"read_file",]
 
 def path_exists(file_path: str) -> bool:
     """Check if the file is a regular file."""
@@ -21,7 +23,7 @@ def is_binary_file(file_path: str) -> bool:
         with open(file_path, "rb") as f:
             data = f.read(1024)  # Read the first 1024 bytes
         return any(byte < 9 or byte in (11, 12, 14, 15, 127) for byte in data)
-    except (IOError, FileNotFoundError):  # pragma: no cover
+    except OSError:  # pragma: no cover
         return False
 
 
@@ -36,7 +38,7 @@ def is_file_descriptor(file_path: int) -> bool:
 def read_file(file_path: str) -> str:
     """Read the file content."""
     try:
-        with open(file_path, "r") as f:
+        with open(file_path) as f:
             return f.read()
-    except (IOError, FileNotFoundError):  # pragma: no cover
+    except OSError:  # pragma: no cover
         return ""  # Handle missing or inaccessible files gracefully

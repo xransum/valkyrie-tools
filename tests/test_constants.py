@@ -1,11 +1,12 @@
+"""Constants test module."""
 from valkyrie_tools.constants import (
+    BINARY_FILE_READ_ERROR,
     HELP_SHORT_TEXT,
-    NO_ARGS_TEXT,
+    INTERACTIVE_MODE_PROMPT,
     INVALID_ARG_TEXT,
     INVALID_FLAG_TEXT,
-    BINARY_FILE_READ_ERROR,
+    NO_ARGS_TEXT,
     YES_NO_PROMPT,
-    INTERACTIVE_MODE_PROMPT,
 )
 
 

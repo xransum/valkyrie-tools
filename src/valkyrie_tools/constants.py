@@ -1,5 +1,4 @@
-"""Constants modules"""
-
+"""Constants modules."""
 
 
 __all__ = [

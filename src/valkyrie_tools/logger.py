@@ -1,8 +1,16 @@
-"""Logger module"""
+"""Logger module."""
 import logging
 
-
-__all__ = ["logging", "log_message_format", "log_date_format", "log_levels", "get_verbosity", "set_log_level", "get_log_level", "setup_logger", ]
+__all__ = [
+    "logging",
+    "log_message_format",
+    "log_date_format",
+    "log_levels",
+    "get_verbosity",
+    "set_log_level",
+    "get_log_level",
+    "setup_logger",
+]
 
 # log_message_format = "%(asctime)s %(levelname)s %(message)s"
 log_message_format = "%(message)s"
@@ -13,9 +21,9 @@ log_levels = [logging.ERROR, logging.WARNING, logging.INFO, logging.DEBUG]
 def get_verbosity(verbose: int) -> int:
     """Log level getter function."""
     # Define log level based on verbosity count
-    log_level = int(log_levels[
-        min(verbose, len(log_levels) - 1)  # Max verbosity is DEBUG (3)
-    ])
+    log_level = int(
+        log_levels[min(verbose, len(log_levels) - 1)]  # Max verbosity is DEBUG (3)
+    )
     # Set log level
     return log_level
 
@@ -34,6 +42,7 @@ def get_log_level(logger: logging.Logger) -> int:
 
 
 def setup_logger(verbose: int) -> logging.Logger:
+    """Wrapper function with built-in verbosity handling."""
     logger = logging.getLogger(__name__)
     # Check if a StreamHandler already exists
     if not logger.handlers:

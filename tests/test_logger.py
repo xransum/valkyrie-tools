@@ -1,13 +1,11 @@
-"""Logger test module"""
+"""Logger test module."""
 from valkyrie_tools.logger import (
-    logging,
-    log_levels,
-    get_verbosity,
-    set_log_level,
     get_log_level,
+    get_verbosity,
+    log_levels,
+    set_log_level,
     setup_logger,
 )
-
 
 logger = setup_logger(0)
 

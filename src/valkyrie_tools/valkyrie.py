@@ -1,6 +1,6 @@
 """Command-line interface."""
 import click
-import sys
+
 from . import __version__
 from .logger import setup_logger
 
@@ -43,9 +43,7 @@ logger = None
 def cli(
     verbose: int,
 ) -> None:
-    """This script is the entry point to the
-    valkyrie-tools cli."""
-
+    """This script is the entry point to the valkyrie-tools cli."""
     global logger
     logger = setup_logger(verbose)
     logger.debug("Debug mode enabled")

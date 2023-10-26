@@ -1,12 +1,9 @@
+"""Valkyrie test module."""
 import pytest
 from _pytest.logging import LogCaptureFixture
 from click.testing import CliRunner
 
-from valkyrie_tools.valkyrie import (
-    __version__,
-    # deactivate_prompts,
-    cli,
-)
+from valkyrie_tools.valkyrie import __version__, cli  # deactivate_prompts,
 
 
 @pytest.fixture
@@ -19,7 +16,8 @@ def test_version_option(runner: CliRunner) -> None:
     """Test --version option."""
     result = runner.invoke(cli, ["-V"])
     assert result.exit_code == 0
-    assert 3 == len(result.output.strip().split("."))
+    # assert 3 == len(result.output.strip().split("."))
+    assert __version__ in result.output
 
 
 def test_verbose_option(runner: CliRunner, caplog: LogCaptureFixture) -> None:

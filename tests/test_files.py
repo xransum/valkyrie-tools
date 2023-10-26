@@ -1,21 +1,21 @@
 """File module tests."""
-import tempfile
 import os
-
-import pytest
+import tempfile
 from typing import Generator
 
+import pytest
+
 from valkyrie_tools.files import (
-    path_exists,
     is_binary_file,
     is_file_descriptor,
+    path_exists,
     read_file,
 )
 
 
 @pytest.fixture
 def binary_file() -> Generator[str, None, None]:
-    # Create a temporary binary file
+    """Create a temporary binary file."""
     with tempfile.NamedTemporaryFile(delete=False) as file:
         file.write(b"\x00\x01\x02\x03")  # Write some binary data
         file.close()
@@ -27,7 +27,7 @@ def binary_file() -> Generator[str, None, None]:
 
 @pytest.fixture
 def empty_file() -> Generator[str, None, None]:
-    # Create a temporary empty file
+    """Create a temporary empty file."""
     with tempfile.NamedTemporaryFile(delete=False) as file:
         yield file.name
 
@@ -48,6 +48,7 @@ def test_is_binary_file(binary_file: str) -> None:
 
 
 def test_is_file_descriptor(tmp_path: str) -> None:
+    """Test file descriptor function."""
     tmp_file = os.path.join(tmp_path, "test.txt")
 
     # Create a temporary file
