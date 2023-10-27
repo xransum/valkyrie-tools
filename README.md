@@ -1,11 +1,21 @@
 # Valkyrie Tools
 
-[![PyPI](https://img.shields.io/pypi/v/valkyrie-tools.svg)][pypi_]
-[![Python Version](https://img.shields.io/pypi/pyversions/valkyrie-tools)][python version]
-[![License](https://img.shields.io/pypi/l/valkyrie-tools)][license]
-[![Read the documentation at https://valkyrie-tools.readthedocs.io/](https://img.shields.io/readthedocs/valkyrie-tools/latest.svg?label=Read%20the%20Docs)][read the docs]
+<p align="center">
+    <img src="https://raw.githubusercontent.com/xransum/valkyrie-tools/main/docs/images/logo.png" width="20%" style="border-radius: 10%">
+</p>
+
+
 [![Tests](https://github.com/xransum/valkyrie-tools/workflows/Tests/badge.svg)][tests]
 [![Codecov](https://codecov.io/gh/xransum/valkyrie-tools/branch/main/graph/badge.svg)][codecov]
+
+[![PyPI](https://img.shields.io/pypi/v/valkyrie-tools.svg)][pypi_]
+[![Python Version](https://img.shields.io/pypi/pyversions/valkyrie-tools)][python version]
+
+[![Python Black](https://img.shields.io/badge/code%20style-black-000000.svg?label=Style)](https://github.com/xransum/valkyrie-tools)
+[![Read the documentation at https://valkyrie-tools.readthedocs.io/](https://img.shields.io/readthedocs/valkyrie-tools/latest.svg?label=Read%20the%20Docs)][read the docs]
+
+[![Downloads](https://pepy.tech/badge/valkyrie-tools)](https://pepy.tech/project/valkyrie-tools)
+[![License](https://img.shields.io/pypi/l/valkyrie-tools)][license]
 
 [pypi_]: https://pypi.org/project/valkyrie-tools/
 [python version]: https://pypi.org/project/valkyrie-tools
