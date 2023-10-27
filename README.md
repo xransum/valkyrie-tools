@@ -4,7 +4,6 @@
     <img src="https://raw.githubusercontent.com/xransum/valkyrie-tools/main/docs/images/logo.png" width="20%" style="border-radius: 10%">
 </p>
 
-
 [![Tests](https://github.com/xransum/valkyrie-tools/workflows/Tests/badge.svg)][tests]
 [![Codecov](https://codecov.io/gh/xransum/valkyrie-tools/branch/main/graph/badge.svg)][codecov]
 
