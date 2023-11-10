@@ -1,9 +1,10 @@
 """File module tests."""
 import os
 import tempfile
-from typing import Generator
-
-import pytest
+import unittest
+from glob import glob
+from typing import List
+from unittest.mock import Mock, patch
 
 from valkyrie_tools.files import (
     is_binary_file,
@@ -13,59 +14,206 @@ from valkyrie_tools.files import (
 )
 
 
-@pytest.fixture
-def binary_file() -> Generator[str, None, None]:
-    """Create a temporary binary file."""
-    with tempfile.NamedTemporaryFile(delete=False) as file:
-        file.write(b"\x00\x01\x02\x03")  # Write some binary data
-        file.close()
-        yield file.name
+class TestPathExistsFunction(unittest.TestCase):
+    """Test path exists function."""
 
-    # Clean up: delete the temporary binary file
-    os.remove(file.name)
+    def setUp(self) -> None:
+        """Setup fixtures."""
+        # Create a binary file
+        self.tmp_file = tempfile.NamedTemporaryFile(delete=False)
+        self.tmp_file.write(b"Hello World!")
+        self.tmp_file.close()
 
+        self.tmp_directory = tempfile.TemporaryDirectory()
+        self.tmp_directory_name = self.tmp_directory.name
 
-@pytest.fixture
-def empty_file() -> Generator[str, None, None]:
-    """Create a temporary empty file."""
-    with tempfile.NamedTemporaryFile(delete=False) as file:
-        yield file.name
+    def tearDown(self) -> None:
+        """Teardown fixtures."""
+        os.unlink(self.tmp_file.name)
+        os.rmdir(self.tmp_directory_name)
 
-    # Clean up: delete the temporary empty file
-    os.remove(file.name)
+    def test_path_exists(self) -> None:
+        """Test path_exists function with valid file."""
+        self.assertTrue(path_exists(self.tmp_file.name))
 
+    def test_path_not_exists(self) -> None:
+        """Test path_exists with invalid file."""
+        self.assertFalse(path_exists("nonexistent_file"))
 
-def test_path_exists() -> None:
-    """Check if the file is a regular file."""
-    assert path_exists("non_existent_file") is False
-    assert path_exists(__file__) is True
-
-
-def test_is_binary_file(binary_file: str) -> None:
-    """Check if the file is a binary file."""
-    assert is_binary_file(__file__) is False
-    assert is_binary_file(binary_file) is True
+    def test_exception_path_exists(self) -> None:
+        """Test path_exists function with invalid argument."""
+        self.assertFalse(path_exists({"foo": "bar"}))
 
 
-def test_is_file_descriptor(tmp_path: str) -> None:
-    """Test file descriptor function."""
-    tmp_file = os.path.join(tmp_path, "test.txt")
+class TestReadFileFunction(unittest.TestCase):
+    """Test read file function."""
 
-    # Create a temporary file
-    with open(tmp_file, "w") as f:
-        f.write("test data")
+    def setUp(self) -> None:
+        """Setup fixtures."""
+        # Create a binary file
+        self.tmp_file = tempfile.NamedTemporaryFile(delete=False)
+        self.tmp_file.write(b"Hello World!")
+        self.tmp_file.close()
 
-    # Obtain the file descriptor
-    file_descriptor = os.open(tmp_file, os.O_RDONLY)
+        self.tmp_directory = tempfile.TemporaryDirectory()
+        self.tmp_directory_name = self.tmp_directory.name
 
-    try:
-        assert is_file_descriptor(file_descriptor) is True
-    finally:
-        # Close the file descriptor
-        os.close(file_descriptor)
+    def tearDown(self) -> None:
+        """Teardown fixtures."""
+        os.unlink(self.tmp_file.name)
+        os.rmdir(self.tmp_directory_name)
+
+    def test_read_file(self) -> None:
+        """Test path_exists function with valid file."""
+        self.assertIn("Hello World!", read_file(self.tmp_file.name))
+
+    def test_read_non_exists_file(self) -> None:
+        """Test path_exists with invalid file."""
+        self.assertFalse(path_exists("nonexistent_file"))
+
+    @patch("valkyrie_tools.files.os.path.exists")
+    def test_read_file_exception(self, mock_path_exists: Mock) -> None:
+        """Test path_exists function with invalid argument."""
+        mock_path_exists.return_value = False
+        # Expect an OSError
+        with self.assertRaises(OSError):
+            read_file("nonexistent_file")
+
+        mock_path_exists.assert_called()
+
+    @patch("valkyrie_tools.files.os.path.exists")
+    @patch("valkyrie_tools.files.os.path.islink")
+    @patch("valkyrie_tools.files.os.path.isfile")
+    @patch("valkyrie_tools.files.os.path.isdir")
+    def test_read_directory(
+        self, mock_isdir: Mock, mock_isfile: Mock, mock_islink: Mock, mock_exists: Mock
+    ) -> None:
+        """Test read_file function for a directory."""
+        mock_exists.return_value = True
+        mock_islink.return_value = False
+        mock_isfile.return_value = False
+        mock_isdir.return_value = True
+
+        # Create a dir in tmp for testing
+        with self.assertRaises(OSError):
+            read_file(self.tmp_directory_name)
+
+        mock_exists.assert_called()
+        mock_islink.assert_called()
+        mock_isfile.assert_called()
+        mock_isdir.assert_called()
+
+    @patch("valkyrie_tools.files.os.path.exists")
+    @patch("valkyrie_tools.files.os.path.islink")
+    @patch("valkyrie_tools.files.os.path.isfile")
+    @patch("valkyrie_tools.files.os.path.isdir")
+    def test_read_failover(
+        self, mock_isdir: Mock, mock_isfile: Mock, mock_islink: Mock, mock_exists: Mock
+    ) -> None:
+        """Test read_file function failover using a directory."""
+        mock_exists.return_value = True
+        mock_islink.return_value = False
+        mock_isfile.return_value = False
+        mock_isdir.return_value = False
+
+        # Create a dir in tmp for testing
+        with self.assertRaises(OSError):
+            read_file(self.tmp_directory_name)
+
+        mock_exists.assert_called()
+        mock_islink.assert_called()
+        mock_isfile.assert_called()
+        mock_isdir.assert_called()
 
 
-def test_read_file(empty_file: str) -> None:
-    """Read the file content."""
-    assert read_file(__file__) == open(__file__).read()
-    assert read_file(empty_file) == ""
+class TestBinaryFileFunction(unittest.TestCase):
+    """Test binary file functions."""
+
+    def setUp(self) -> None:
+        """Setup fixtures."""
+        # Create a binary file
+        self.tmp_file = tempfile.NamedTemporaryFile(delete=False)
+        self.tmp_file.write(b"\x00\x01\x02\x03\x04\x05\x06\x07\x08\x09")
+        self.tmp_file.close()
+
+    def tearDown(self) -> None:
+        """Teardown fixtures."""
+        os.unlink(self.tmp_file.name)
+
+    def test_valid_binary_file(self) -> None:
+        """Test is_binary_file function."""
+        self.assertTrue(is_binary_file(self.tmp_file.name))
+
+    def test_invalid_binary_file_path(self) -> None:
+        """Test is_binary_file function."""
+        self.assertFalse(is_binary_file(__file__))
+
+    def test_directory_path(self) -> None:
+        """Test is_binary_file function."""
+        with tempfile.TemporaryDirectory() as tmp_dir_name:
+            self.assertFalse(is_binary_file(tmp_dir_name))
+
+
+class TestFileDescriptorFunction(unittest.TestCase):
+    """Test file descriptor functions."""
+
+    def setUp(self) -> None:
+        """Setup fixtures."""
+        self.stdout = os.fdopen(os.dup(1), "w")
+        self.tmp_file = tempfile.NamedTemporaryFile(delete=False)
+        self.tmp_file.write(b"Hello World!")
+        self.tmp_file.close()
+
+    def tearDown(self) -> None:
+        """Teardown fixtures."""
+        os.unlink(self.tmp_file.name)
+
+    @staticmethod
+    def _get_file_descriptors() -> List[str]:
+        """Get file descriptors."""
+        # Get the filepath for the systems stdout file descriptor
+        # this would be /dev/fd/1 on Linux and /proc/self/fd/1 on
+        # MacOS. This might not work on Windows.
+        paths = [
+            glob("/dev/fd/[0-9]*"),
+            glob("/proc/self/fd/[0-9]*"),
+            glob("/proc/*/fd/[0-9]*"),
+        ]
+        # Filter out non-existent paths
+        fds = filter(os.path.exists, paths[0])
+        return fds
+
+    def test_valid_file_descriptor(self) -> None:
+        """Test is_file_descriptor function."""
+        self.assertTrue(is_file_descriptor(self.stdout.fileno()))
+
+    def test_invalid_file_descriptor(self) -> None:
+        """Test is_file_descriptor function."""
+        self.assertFalse(is_file_descriptor(__file__))
+
+    def test_invalid_int_file_descriptor(self) -> None:
+        """Test is_file_descriptor function."""
+        self.assertFalse(is_file_descriptor(1337))
+
+    def test_empty_file_descriptor_path(self) -> None:
+        """Test is_file_descriptor function."""
+        self.assertFalse(is_file_descriptor(""))
+
+    def test_obj_file_descriptor_path(self) -> None:
+        """Test is_file_descriptor function."""
+        self.assertFalse(is_file_descriptor({"foo": "bar"}))
+
+    def test_valid_file_descriptor_path(self) -> None:
+        """Test is_file_descriptor function."""
+        # Get the filepath for the systems stdout file descriptor
+        # this would be /dev/fd/1 on Linux and /proc/self/fd/1 on
+        # MacOS. This might not work on Windows.
+        path = next(self._get_file_descriptors())
+        self.assertTrue(is_file_descriptor(path))
+
+    @patch("valkyrie_tools.files.isinstance")
+    def test_path_str_exception(self, mock_isinstance: Mock) -> None:
+        """Test path_exists function with invalid argument."""
+        mock_isinstance.side_effect = [False, True]
+        self.assertFalse(is_file_descriptor(None))
+        mock_isinstance.assert_called()
