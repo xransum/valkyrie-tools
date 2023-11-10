@@ -2,11 +2,13 @@
 import click
 
 from . import __version__
-from .logger import setup_logger
+from .commons import sys_exit
 
 __all__ = ["__version__"]
 
-logger = None
+__prog_name__ = "valkyrie"
+__prog_desc__ = "Valkyrie tools cli interface."
+
 
 # def deactivate_prompts(ctx, param, value):
 #     if value:
@@ -14,14 +16,7 @@ logger = None
 #             if isinstance(p, click.Option) and p.prompt is not None:
 #                 p.prompt = None
 #     return value
-
-
-@click.command(
-    name="valkyrie",
-    help="Valkyrie tools cli interface.",
-    context_settings=dict(help_option_names=["-h", "--help"]),
-    hidden=True,
-)
+#
 # @click.option(
 #    "-s",
 #    "--silent",
@@ -32,21 +27,27 @@ logger = None
 #    callback=deactivate_prompts,
 #    help="Silent mode",
 # )
-@click.option("-v", "--verbose", count=True, help="Make the operation more talkative")
+
+
+@click.command(
+    name=__prog_name__,
+    help=__prog_desc__,
+    context_settings=dict(help_option_names=["-h", "--help"]),
+    hidden=True,
+)
 @click.version_option(
     __version__,
     "-V",
     "--version",
     message="%(prog)s %(version)s",
-    help="Show version number and quit",
+    help="Show version and exit.",
 )
+@click.pass_context
 def cli(
-    verbose: int,
+    ctx: click.Context,  # noqa: C901
 ) -> None:
-    """This script is the entry point to the valkyrie-tools cli."""
-    global logger
-    logger = setup_logger(verbose)
-    logger.debug("Debug mode enabled")
+    """Entry point to the valkyrie-tools suite."""
+    sys_exit("%s functionality not yet implemented", 1)
 
 
 if __name__ == "__main__":
