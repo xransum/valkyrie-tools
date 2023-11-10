@@ -4,7 +4,6 @@
     <img src="https://raw.githubusercontent.com/xransum/valkyrie-tools/main/docs/images/logo.png" width="20%" style="border-radius: 10%">
 </p>
 
-
 [![Tests](https://github.com/xransum/valkyrie-tools/workflows/Tests/badge.svg)][tests]
 [![Codecov](https://codecov.io/gh/xransum/valkyrie-tools/branch/main/graph/badge.svg)][codecov]
 
@@ -60,7 +59,11 @@ $ valkyrie --help
 
 ### Commands
 
-- `valkyrie` - The main entrypoint for configuring the tools.
+- `valkyrie`: The main entrypoint for configuring the tools.
+- `urlcheck`: Check the aliveness of a URL.
+- `ipcheck`: Get information for an IP address. (_WIP_)
+- `dnscheck`: Get dns records for a domain/IP address. (_WIP_)
+- `whobe`: Get information for a domain/IP address. (_WIP_)
 
 ### CLI
 
@@ -68,6 +71,53 @@ You can call valkyrie-tools from the command line like so:
 
 ```bash
 $ valkyrie
+```
+
+#### Passing Input
+
+All supported methods of passing input to the script are:
+
+**Text as argument:**
+
+```bash
+$ myscript "abc"
+```
+
+**Text from file:**
+
+```bash
+$ myscript test.txt
+```
+
+**Interactive mode:**
+
+```bash
+$ myscript -I
+$ myscript --interactive
+```
+
+**Piped stdin input:**
+
+```bash
+$ echo "abc" | myscript
+```
+
+**Piped stdin input (alt):**
+
+```bash
+$ myscript <<<"abc"
+```
+
+**Input file:**
+
+```bash
+$ myscript <myfile.txt
+```
+
+**Process substitution by file descriptor:**
+
+```bash
+$ myscript <(cat myfile.txt)
 ```
 
 ### Import
@@ -100,6 +150,8 @@ please [file an issue] along with a detailed description.
 This project was built off of the sweat and tears
 of the the bad actors it was built to fight.
 
+<!-- github-only -->
+
 [@xransum]: https://github.com/xransum
 [nox]: https://nox.thea.codes/
 [poetry]: https://python-poetry.org/
@@ -111,8 +163,5 @@ of the the bad actors it was built to fight.
 [pip install]: https://pip.pypa.io/en/stable/reference/pip_install/
 [pip]: https://pip.pypa.io/
 [pipx]: https://pipxproject.github.io/pipx/
-
-<!-- github-only -->
-
 [license]: https://github.com/xransum/valkyrie-tools/blob/main/LICENSE
 [contributor guide]: https://github.com/xransum/valkyrie-tools/blob/main/CONTRIBUTING.md
