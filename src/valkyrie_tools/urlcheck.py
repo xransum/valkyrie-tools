@@ -1,34 +1,22 @@
 """Command-line script for checking url aliveness and status."""
-import click
-import re
-import requests
-from typing import Optional
-import sys
 import io
+import re
+import sys
+from typing import Optional
 
-from .constants import (
-    EMPTY_ARGS_NOT_ALLOWED,
-    DEFAULT_CATEGORIZED_HEADERS,
-)
-from .commons import (
-    sys_exit,
-    handle_value_argument,
-    read_value_from_input,
-    URL_REGEX,
-)
-from .httpr import (
-    get_http_version_text,
-    build_redirect_chain,
-    filter_headers,
-)
+import click
+import requests
+
+from .commons import URL_REGEX, read_value_from_input
+from .constants import DEFAULT_CATEGORIZED_HEADERS
 from .exceptions import (
-    REQUESTS_SSL_ERROR_MESSAGE,
     REQUESTS_CONNECTION_ERROR_MESSAGES,
-    REQUESTS_UNHANDLED_CONNECTION_ERROR_MESSAGE,
+    REQUESTS_SSL_ERROR_MESSAGE,
     REQUESTS_TIMEOUT_ERROR_MESSAGE,
     REQUESTS_TOO_MANY_REDIRECTS_ERROR_MESSAGE,
+    REQUESTS_UNHANDLED_CONNECTION_ERROR_MESSAGE,
 )
-
+from .httpr import build_redirect_chain, filter_headers, get_http_version_text
 
 __prog_name__ = "urlcheck"
 __prog_desc__ = "Check url(s) for their aliveness and status."
@@ -82,9 +70,9 @@ OUTPUT_FILE = None
     help="Show version and exit.",
 )
 @click.argument("values", nargs=-1, required=False)
-@click.pass_context
-def cli(
-    ctx: click.Context,  # noqa: C901
+# @click.pass_context
+def cli(  # noqa: C901
+    # ctx: click.Context,
     values: Optional[str],
     output: Optional[io.StringIO],
     interactive: bool,

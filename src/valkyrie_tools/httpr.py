@@ -1,16 +1,14 @@
 """Httpr module for handling http requests and responses."""
-import click
-import requests
-from requests import Response
-from datetime import datetime
 import re
 import warnings
-import urllib3.exceptions
-from bs4 import BeautifulSoup
+from datetime import datetime
+from typing import Any, Dict, List, Optional, Union
 from urllib.parse import urljoin, urlparse, urlunparse  # noqa:F401
-from typing import Dict, List, Union, Optional, Any, Tuple, Callable, Iterable
-from requests.packages.urllib3.exceptions import InsecureRequestWarning
 
+import requests
+from bs4 import BeautifulSoup
+from requests import Response
+from requests.packages.urllib3.exceptions import InsecureRequestWarning
 
 # Suppress insecure request warnings
 warnings.simplefilter("ignore", InsecureRequestWarning)
@@ -65,7 +63,6 @@ def filter_headers(
     Returns:
         Dict[str, str]: filtered headers
     """
-
     if keys is None:
         keys = []
 
@@ -105,7 +102,6 @@ def get_http_version_text(raw_version: int) -> str:
     Returns:
         str: HTTP/1.0, HTTP/1.1, HTTP/1.2, HTTP/1.3, etc.
     """
-
     tls_version = get_http_version(raw_version)
     return "HTTP/%s" % tls_version
 
@@ -144,7 +140,6 @@ def extract_redirects_from_html_meta(soup: BeautifulSoup) -> Optional[str]:
     Returns:
         Optional[str]: redirect url
     """
-
     meta_redirect = soup.find("meta", attrs={"http-equiv": "refresh"})
     if meta_redirect is not None:
         content = meta_redirect.get("content", "")

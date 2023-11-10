@@ -1,8 +1,8 @@
 """Whois utility functions."""
-import whois
-from ipwhois import IPWhois
 from typing import Optional, Union
 
+import whois
+from ipwhois import IPWhois
 
 __all__ = ["get_whois", "get_ip_whois"]
 
@@ -18,8 +18,8 @@ def get_whois(
         #     w = None
     except whois.parser.PywhoisError:
         w = None
-    finally:
-        return w
+
+    return w
 
 
 def get_ip_whois(ipaddr: str) -> Optional[dict]:
@@ -31,5 +31,5 @@ def get_ip_whois(ipaddr: str) -> Optional[dict]:
         # results = ipw.lookup_rdap()
     except ValueError:
         results = None
-    finally:
-        return results
+
+    return results

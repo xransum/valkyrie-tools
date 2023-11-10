@@ -1,16 +1,14 @@
 """Package commons for valkyrie-tools."""
 import os
-import sys
 import re
+import sys
+from typing import List, Optional, Union
+
 import click
-import select
 from art import text2art
 
-from typing import Optional, Union, List, Tuple
-
-from .files import read_file
 from .constants import INTERACTIVE_MODE_PROMPT
-
+from .files import read_file
 
 __all__ = [
     "URL_REGEX",
@@ -51,8 +49,9 @@ def sys_exit(text: str, code: int = 1, help_short: bool = False) -> None:
 
     Args:
         text (str): Error message.
-        code (int, optional): Exit code. Defaults to 1.
-        help_short (bool, optional): Whether to show the short help message. Defaults to False.
+        code (int): Exit code. Defaults to 1.
+        help_short (bool): Whether to show the short
+            help message. Defaults to False.
     """
     click.echo(text, err=True)
     if help_short:
@@ -108,15 +107,15 @@ def read_value_from_input(
     interactive: bool = False,
     name: Optional[str] = None,
 ) -> List[Union[str, None]]:
-    """Read text from input, handling interactive mode
-    and piped input.
+    """Read text from input, handling interactive mode and piped input.
 
     Args:
-        values (Optional[str]): Input values.
-        interactive (bool): Whether to enable interactive mode.
+        values (Optional[Union[str, List[str]]]): String or list of strings.
+        interactive (bool): Enable interactive mode. Defaults to False.
+        name (Optional[str], optional): Name of the tool. Defaults to None.
 
     Returns:
-        List[Union[str, None]]: List of input values.
+        List[Union[str, None]]: List of strings.
     """
     # If values is None, set it to empty list
     if values is None:

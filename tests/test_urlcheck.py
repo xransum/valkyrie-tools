@@ -1,32 +1,26 @@
 """Urlcheck test module."""
-from typing import List, Optional, Tuple, Union
-import unittest
-import pytest
-from _pytest.logging import LogCaptureFixture
-from unittest.mock import patch, call, MagicMock, Mock
-from click.testing import CliRunner
-import requests
 import os
+import unittest
+from typing import List, Optional, Tuple, Union
+from unittest.mock import MagicMock, Mock, patch
 
-from valkyrie_tools.urlcheck import (
-    __prog_name__,
-    __prog_desc__,
-    __version__,
-    cli,
-    HEADER_KEY_TRUNC_LENGTH,
-)
-from valkyrie_tools.constants import (
-    EMPTY_ARGS_NOT_ALLOWED,
-    INTERACTIVE_MODE_PROMPT,
-)
+import requests
+from click.testing import CliRunner
+
+from valkyrie_tools.constants import INTERACTIVE_MODE_PROMPT
 from valkyrie_tools.exceptions import (
-    REQUESTS_SSL_ERROR_MESSAGE,
     REQUESTS_CONNECTION_ERROR_MESSAGES,
-    REQUESTS_UNHANDLED_CONNECTION_ERROR_MESSAGE,
+    REQUESTS_SSL_ERROR_MESSAGE,
     REQUESTS_TIMEOUT_ERROR_MESSAGE,
     REQUESTS_TOO_MANY_REDIRECTS_ERROR_MESSAGE,
+    REQUESTS_UNHANDLED_CONNECTION_ERROR_MESSAGE,
 )
-
+from valkyrie_tools.urlcheck import (  # __prog_desc__,
+    HEADER_KEY_TRUNC_LENGTH,
+    __prog_name__,
+    __version__,
+    cli,
+)
 
 META_HTML = '<html><head><meta http-equiv="refresh" content="0; URL=%s"></head></html>'
 LONG_HEADER_VALUE = "a" * (HEADER_KEY_TRUNC_LENGTH + 2)
@@ -92,7 +86,7 @@ class TestURLCheckCLI(unittest.TestCase):
         redirects: bool = False,
         meta_redirect: bool = False,
         max_next: Optional[int] = None,
-    ) -> Union[List[List[Union[str, Mock,]]], List[Union[str, Mock,]],]:
+    ) -> Union[List[List[Union[str, Mock]]], List[Union[str, Mock]]]:
         """Create mock responses from response chains."""
         single_chain = False
         if isinstance(response_chains, tuple):
@@ -184,6 +178,7 @@ class TestURLCheckCLI(unittest.TestCase):
 
     @patch("valkyrie_tools.httpr.make_request")
     def test_interactive_mode(self, mock_make_request: MagicMock) -> None:
+        """Test interactive mode."""
         mock_chain_link = self._create_mock_responses(URL_MOCKS[0])
         url, mock_response = mock_chain_link
         mock_make_request.return_value = mock_chain_link
@@ -206,6 +201,7 @@ class TestURLCheckCLI(unittest.TestCase):
 
     @patch("valkyrie_tools.httpr.make_request")
     def test_output_file_option(self, mock_make_request: MagicMock) -> None:
+        """Test --output-file option."""
         mock_chain_link = self._create_mock_responses(URL_MOCKS[0])
         url, mock_response = mock_chain_link
         mock_make_request.return_value = mock_chain_link
@@ -279,7 +275,6 @@ class TestURLCheckCLI(unittest.TestCase):
     @patch("valkyrie_tools.httpr.make_request")
     def test_request_ssl_exception(self, mock_make_request: MagicMock) -> None:
         """Test SSL exception."""
-
         url, *_ = URL_MOCKS[0]
         error = requests.exceptions.SSLError(REQUESTS_SSL_ERROR_MESSAGE)
         mock_make_request.return_value = [url, error]
@@ -289,7 +284,6 @@ class TestURLCheckCLI(unittest.TestCase):
     @patch("valkyrie_tools.httpr.make_request")
     def test_request_connection_exceptions(self, mock_make_request: MagicMock) -> None:
         """Test connection exceptions."""
-
         url, *_ = URL_MOCKS[0]
         for key, value in REQUESTS_CONNECTION_ERROR_MESSAGES.items():
             error = requests.exceptions.ConnectionError(key)
@@ -302,7 +296,6 @@ class TestURLCheckCLI(unittest.TestCase):
         self, mock_make_request: MagicMock
     ) -> None:
         """Test unhandled connection exceptions."""
-
         url, *_ = URL_MOCKS[0]
         error = requests.exceptions.ConnectionError("Unknown connection exception")
         mock_make_request.return_value = [url, error]
@@ -313,7 +306,6 @@ class TestURLCheckCLI(unittest.TestCase):
     @patch("valkyrie_tools.httpr.make_request")
     def test_request_ambiguous_exception(self, mock_make_request: MagicMock) -> None:
         """Test ambiguous exception."""
-
         url, *_ = URL_MOCKS[0]
         msg = "Value exception."
         error = ValueError(msg)
@@ -325,7 +317,6 @@ class TestURLCheckCLI(unittest.TestCase):
     @patch("valkyrie_tools.httpr.make_request")
     def test_request_timeout_exception(self, mock_make_request: MagicMock) -> None:
         """Test timeout exception."""
-
         url, *_ = URL_MOCKS[0]
         error = requests.exceptions.Timeout("Timeout exception thrown")
         mock_make_request.return_value = [url, error]
@@ -338,7 +329,6 @@ class TestURLCheckCLI(unittest.TestCase):
         self, mock_make_request: MagicMock
     ) -> None:
         """Test too many redirects exception."""
-
         url, *_ = URL_MOCKS[0]
         error = requests.exceptions.TooManyRedirects("Too many redirects thrown")
         mock_make_request.return_value = [url, error]
@@ -349,7 +339,6 @@ class TestURLCheckCLI(unittest.TestCase):
     @patch("valkyrie_tools.httpr.make_request")
     def test_request_status_codes(self, mock_make_request: MagicMock) -> None:
         """Test request status codes."""
-
         codes = [(c * 100 + ode) for c in range(1, 7) for ode in range(0, 10)]
         for code in codes:
             url, *_ = URL_MOCKS[0]
