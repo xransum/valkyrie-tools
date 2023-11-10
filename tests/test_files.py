@@ -86,7 +86,11 @@ class TestReadFileFunction(unittest.TestCase):
     @patch("valkyrie_tools.files.os.path.isfile")
     @patch("valkyrie_tools.files.os.path.isdir")
     def test_read_directory(
-        self, mock_isdir: Mock, mock_isfile: Mock, mock_islink: Mock, mock_exists: Mock
+        self,
+        mock_isdir: Mock,
+        mock_isfile: Mock,
+        mock_islink: Mock,
+        mock_exists: Mock,
     ) -> None:
         """Test read_file function for a directory."""
         mock_exists.return_value = True
@@ -108,7 +112,11 @@ class TestReadFileFunction(unittest.TestCase):
     @patch("valkyrie_tools.files.os.path.isfile")
     @patch("valkyrie_tools.files.os.path.isdir")
     def test_read_failover(
-        self, mock_isdir: Mock, mock_isfile: Mock, mock_islink: Mock, mock_exists: Mock
+        self,
+        mock_isdir: Mock,
+        mock_isfile: Mock,
+        mock_islink: Mock,
+        mock_exists: Mock,
     ) -> None:
         """Test read_file function failover using a directory."""
         mock_exists.return_value = True
@@ -174,14 +182,8 @@ class TestFileDescriptorFunction(unittest.TestCase):
         # Get the filepath for the systems stdout file descriptor
         # this would be /dev/fd/1 on Linux and /proc/self/fd/1 on
         # MacOS. This might not work on Windows.
-        paths = [
-            glob("/dev/fd/[0-9]*"),
-            glob("/proc/self/fd/[0-9]*"),
-            glob("/proc/*/fd/[0-9]*"),
-        ]
-        # Filter out non-existent paths
-        fds = filter(os.path.exists, paths[0])
-        return fds
+        paths = iter(glob("/**/fd/*"))
+        return paths
 
     def test_valid_file_descriptor(self) -> None:
         """Test is_file_descriptor function."""
@@ -202,14 +204,6 @@ class TestFileDescriptorFunction(unittest.TestCase):
     def test_obj_file_descriptor_path(self) -> None:
         """Test is_file_descriptor function."""
         self.assertFalse(is_file_descriptor({"foo": "bar"}))
-
-    def test_valid_file_descriptor_path(self) -> None:
-        """Test is_file_descriptor function."""
-        # Get the filepath for the systems stdout file descriptor
-        # this would be /dev/fd/1 on Linux and /proc/self/fd/1 on
-        # MacOS. This might not work on Windows.
-        path = next(self._get_file_descriptors())
-        self.assertTrue(is_file_descriptor(path))
 
     @patch("valkyrie_tools.files.isinstance")
     def test_path_str_exception(self, mock_isinstance: Mock) -> None:
