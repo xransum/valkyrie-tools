@@ -42,4 +42,5 @@ def test_yes_no_prompt() -> None:
 
 def test_interactive_mode_prompt() -> None:
     """Tests the INTERACTIVE_MODE_PROMPT constant."""
-    assert INTERACTIVE_MODE_PROMPT == "Enter the text (CTRL+d to finalize):"
+    assert "Enter/paste your text" in INTERACTIVE_MODE_PROMPT
+    assert "Ctrl-D" in INTERACTIVE_MODE_PROMPT
