@@ -84,6 +84,24 @@ Reload your terminal or run the following command:
 source ~/.bashrc
 ```
 
+Installing Poetry:
+
+```bash
+curl -sSL https://install.python-poetry.org | python3 -
+```
+
+> **Info:** Use the following to uninstall Poetry:
+>
+> ```bash
+> curl -sSL https://install.python-poetry.org | python3 - --uninstall
+> ```
+
+Reload your terminal or run the following command:
+
+```bash
+source ~/.bashrc
+```
+
 Install the Python package and all it's dependency requirements:
 
 ```bash
@@ -388,7 +406,7 @@ Open a [pull request] to submit changes to this project.
 You can also also use [Github CLI] to create a pull request:
 
 ```bash
-gh pr create --base main --head my-changes
+$ gh pr create --base main --head my-changes
 ```
 
 Your pull request needs to meet the following guidelines for acceptance:
@@ -424,7 +442,7 @@ $ git push origin --delete my-changes
 
 ### Poetry Issues
 
-Sometimes you may have issues with Poetry and it's virtual environment where any
+**Problem:** Sometimes you may have issues with Poetry and it's virtual environment where any
 changes to the package or environment are not being reflected, this can sometimes
 happen when changing major configs. I've found a complete nuke nuke of it's
 cache and environments works:
@@ -434,15 +452,113 @@ rm -rf ~/.cache/pypoetry
 poetry install
 ```
 
-### Nox Issues
+#### Incompatible Lock File
 
-Sometimes you may have issues with Nox where it's not running the correct Python
-version or it's not using the correct virtual environment. You can clear the
-Nox cache by running the following command:
+**Problem:** Poetry is complaining that the lock file is incompatible with the
+current version of Poetry.
+
+**Reason:** Perhaps you changed your Python version or Poetry version, but
+you're getting an error that the lock file is incompatible with the current
+version of Poetry.
+
+**Error:**
+
+```
+  The lock file is not compatible with the current version of Poetry.
+  Upgrade Poetry to be able to read the lock file or, alternatively, regenerate the lock file with the `poetry lock` command.
+```
+
+**Solution:**
 
 ```bash
-rm -rf .nox/
-poetry run nox
+$ rm poetry.lock
+$ poetry lock
+```
+
+#### Forever Hung Resolving Dependencies
+
+**Problem:** Poetry is hanging forever when resolving dependencies.
+
+**Reason:** This can happen when your OS has a GUI, but you're not using it, so when Poetry
+tries to access the keyring, prompting for credentials, it hangs forever.
+
+**Error:**
+
+```
+Updating dependencies
+Resolving dependencies... (76.4s)    <<< Counts up forever
+```
+
+**Debug:**
+
+```
+$ poetry <sub-cmd> -vvv
+```
+
+**Solution:**
+
+```bash
+export PYTHON_KEYRING_BACKEND=keyring.backends.null.Keyring
+```
+
+#### Invalid Group in Poetry Config
+
+**Problem:** Poetry is complaining about an invalid group in the Poetry config.
+
+**Reason:** This can happen when you're using a newer version of Poetry and
+you're using an older version of the config file. Newer versions of Poetry
+have changed the config file structure to use groups like `tool.poetry.group.<group>.<key>`,
+but older versions of Poetry don't.
+
+**Error:**
+
+```
+RuntimeError
+
+The Poetry configuration is invalid:
+   - Additional properties are not allowed ('group' was unexpected)
+```
+
+**Solution:**
+
+```toml
+[tool.poetry.group.dev.dependencies]
+# <dependencies>
+```
+
+Move/change the key to:
+
+```toml
+[tool.poetry.dev-dependencies]
+# <dependencies>
+```
+
+### Nox Issues
+
+#### Nox Caching Problem
+
+**Problem:** For some reason, Nox is not running the correct Python version or
+the virtual environment is not changing or being used, even though you're
+running the `nox` command through Poetry.
+
+**Reason:** How this happens isn't entirely known, however it's a huge pain point
+when changes aren't being reflected in the Nox sessions and clearing the cache
+doesn't work.
+
+**Solution:** You can try to run the following command to clear the entire Nox
+cache:
+
+```bash
+$ rm -rf .nox/
+$ poetry run nox
+```
+
+### No Changes are Working
+
+When in doubt, just nuke all the cache files and directories and try again:
+
+```bash
+$ rm -rf ~/.cache/pypoetry/ .nox/ ~/.cache/pre-commit/ .mypy_cache/ .pytest_cache/ .coverage .coverage.*
 ```
 
 <!-- github-only -->
