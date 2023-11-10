@@ -128,7 +128,25 @@ You can import valkyrie-tools into your project and use it like so:
 import valkyrie_tools
 ```
 
-Each module within valkyrie-tools is documented with a docstring.
+### Scripts
+
+#### urlcheck
+
+Arguments:
+
+```bash
+$ urlcheck <url>
+```
+
+Example Usage:
+
+```bash
+$ urlcheck "https://google.com"
+-> https://google.com
+   HTTP/1.1 - 301 - Moved Permanently
+>> https://www.google.com/
+   HTTP/1.1 - 200 - OK
+```
 
 ## Contributing
 
