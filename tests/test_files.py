@@ -1,5 +1,6 @@
 """File module tests."""
 import os
+import sys
 import tempfile
 import unittest
 from glob import glob
@@ -203,7 +204,11 @@ class TestFileDescriptorFunction(unittest.TestCase):
             with open(file_path, "w") as fd:
                 fd.write("Hello World!")
 
-            self.assertTrue(is_file_descriptor(file_path))
+            if sys.platform == "win32":
+                self.assertEqual(is_file_descriptor(file_path), None)
+
+            else:
+                self.assertTrue(is_file_descriptor(file_path))
 
     def test_invalid_file_descriptor(self) -> None:
         """Test is_file_descriptor function."""
