@@ -6,6 +6,8 @@ from glob import glob
 from typing import List
 from unittest.mock import Mock, patch
 
+from click.testing import CliRunner
+
 from valkyrie_tools.files import (
     is_binary_file,
     is_file_descriptor,
@@ -171,6 +173,7 @@ class TestFileDescriptorFunction(unittest.TestCase):
         self.tmp_file = tempfile.NamedTemporaryFile(delete=False)
         self.tmp_file.write(b"Hello World!")
         self.tmp_file.close()
+        self.runner = CliRunner()
 
     def tearDown(self) -> None:
         """Teardown fixtures."""
@@ -188,6 +191,19 @@ class TestFileDescriptorFunction(unittest.TestCase):
     def test_valid_file_descriptor(self) -> None:
         """Test is_file_descriptor function."""
         self.assertTrue(is_file_descriptor(self.stdout.fileno()))
+
+    def test_valid_file_descriptor_str(self) -> None:
+        """Test is_file_descriptor with string name."""
+        # Mock a file with fd identifier
+        with self.runner.isolated_filesystem():
+            # create the file with a fd directory name
+            # and in int as the name
+            file_path = os.path.join(os.getcwd(), "fd", "1")
+            os.mkdir("fd")
+            with open(file_path, "w") as fd:
+                fd.write("Hello World!")
+
+            self.assertTrue(is_file_descriptor(file_path))
 
     def test_invalid_file_descriptor(self) -> None:
         """Test is_file_descriptor function."""

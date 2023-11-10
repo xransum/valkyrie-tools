@@ -61,9 +61,12 @@ def is_file_descriptor(path: Union[str, int]) -> bool:
             return False
     elif isinstance(path, str):
         try:
+            # On Linux, /dev/fd/x is a symlink to /proc/self/fd/x and
+            # /proc/self/fd/x is a pseudo-symlink to the file open on
+            # fd x.
             if (
                 os.path.exists(path) is True
-                and os.path.islink(path) is True
+                # and os.path.islink(path) is True
                 and "/fd/" in path
             ):
                 return True
