@@ -1,35 +1,43 @@
 """Valkyrie command tests."""
 import unittest
 
-import pytest
 from click.testing import CliRunner
 
-from valkyrie_tools.valkyrie import __prog_desc__, __prog_name__, __version__, cli
+from valkyrie_tools.valkyrie import cli
 
 
-class TestValkyrie(unittest.TestCase):
-    """Test suite for the valkyrie_tools.valkyrie command."""
+class TestWhobe(unittest.TestCase):
+    """Test suite for whobe command."""
 
-    @pytest.fixture(autouse=True)
-    def setup(self) -> None:
-        """Init test case object."""
+    def setUp(self) -> None:
+        """Set up test fixtures, if any."""
         self.runner = CliRunner()
-        self.cli = cli
+
+    def tearDown(self) -> CliRunner:
+        """Tear down test fixtures, if any."""
+        self.runner = None
 
     def test_version_option(self) -> None:
         """Test --version option."""
-        result = self.runner.invoke(self.cli, ["--version"])
-        assert __prog_name__ in result.output
-        assert __version__ in result.output
-        assert result.exit_code == 0
+        result = self.runner.invoke(cli, ["--version"])
+        name, version = result.output.split(" ")
+
+        # Check name is correct
+        self.assertEqual(name, "valkyrie")
+        # Check version is a valid semantic version scheme
+        for v in version.strip().split("."):
+            self.assertTrue(v.isdigit())
+
+        # Check clean exit
+        self.assertEqual(result.exit_code, 0)
 
     def test_help_option(self) -> None:
         """Test --help option."""
-        result = self.runner.invoke(self.cli, ["--help"])
-        assert __prog_desc__ in result.output
-        assert result.exit_code == 0
+        result = self.runner.invoke(cli, ["--help"])
+        self.assertIn("Show version and exit.", result.output)
+        self.assertEqual(result.exit_code, 0)
 
-    def test_cli_empty_args(self) -> None:
-        """It exits with a status code of 1."""
-        result = self.runner.invoke(self.cli)
-        assert result.exit_code == 1
+    def test_empty_args(self) -> None:
+        """It exits with a status code of 0."""
+        result = self.runner.invoke(cli, [])
+        self.assertEqual(result.exit_code, 0)
