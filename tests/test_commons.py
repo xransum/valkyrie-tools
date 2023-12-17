@@ -30,9 +30,7 @@ class TestCLI(unittest.TestCase):
     def test_common_options(self) -> None:
         """Test common_options decorator."""
 
-        @common_options(
-            name="test", description="Test command", version="1.0.0"
-        )
+        @common_options(name="test", description="Test command", version="1.0.0")
         def test_command(values, *_, **__):  # noqa: F811
             """A test command."""
             print(" ".join(values))
@@ -134,7 +132,7 @@ class TestHandleFileInput(unittest.TestCase):
         )
         result = handle_file_input("file_path")
         self.assertEqual(result, "file content")
-        mock_open.assert_called_once_with("file_path", "r", encoding="utf-8")
+        mock_open.assert_called_once_with("file_path", encoding="utf-8")
 
     @patch("sys.stdin.isatty", return_value=True)
     @patch("os.path.exists", return_value=True)
@@ -255,7 +253,7 @@ class TestParseInputMethods(unittest.TestCase):
         )
         result = parse_input_methods(("file_path",), False, self.mock_context)
         self.assertEqual(result, ("file content",))
-        mock_open.assert_called_once_with("file_path", "r", encoding="utf-8")
+        mock_open.assert_called_once_with("file_path", encoding="utf-8")
 
     @patch("sys.stdin.isatty", return_value=True)
     @patch("os.path.exists", return_value=True)
@@ -353,9 +351,7 @@ class TestRegexExtraction(unittest.TestCase):
     def test_extract_emails(self: unittest.TestCase) -> None:
         """Test extract_emails."""
         expected_result = ["test@domain.com"]
-        self.assertEqual(
-            extract_emails(self.text, unique=True), expected_result
-        )
+        self.assertEqual(extract_emails(self.text, unique=True), expected_result)
 
     def test_extract_urls(self: unittest.TestCase) -> None:
         """Test extract_urls."""

@@ -1,11 +1,11 @@
 """Module for IP address manipulation."""
 import ipaddress
-from typing import List, Dict, Optional, Any
-import requests
-import validators
+from typing import Any, Dict, List, Optional
 
-from .constants import DEFAULT_REQUEST_TIMEOUT
+import requests
+
 from .cache import cache
+from .constants import DEFAULT_REQUEST_TIMEOUT
 
 
 # Global constants
@@ -134,20 +134,12 @@ def is_ip_in_cidr(ipaddr: str, cidr: str) -> bool:
 def get_tor_node_ip_addrs() -> List[str]:
     """Get a list of tor node ip addresses.
 
-    Args:
-        cached (bool, optional): Force refresh of cache. Defaults to False.
-
     Returns:
         List[str]: List of tor node ip addresses.
-
-    Raises:
-        requests.exceptions.HTTPError: If HTTP request fails.
     """
-
     r = requests.get(TOR_PROJECT_NODE_ENDPOINT, timeout=DEFAULT_REQUEST_TIMEOUT)
     r.raise_for_status()
-    results = [l for l in r.text.splitlines() if l != ""]
-    return results
+    return [line for line in r.text.splitlines() if line != ""]
 
 
 def is_ip_tor_node(ipaddr: str, cached: bool = True) -> bool:
@@ -159,9 +151,6 @@ def is_ip_tor_node(ipaddr: str, cached: bool = True) -> bool:
 
     Returns:
         bool: True if ipaddr is a tor node.
-
-    Raises:
-        requests.exceptions.HTTPError: If HTTP request fails.
     """
     if cached is False:
         get_tor_node_ip_addrs.clear_cache()
@@ -178,11 +167,7 @@ def get_ip_info(ipaddr: str) -> Optional[dict]:
 
     Returns:
         Optional[dict]: IP address info.
-
-    Raises:
-        requests.exceptions.RequestException: If HTTP request fails.
     """
-
     if is_valid_ip_addr(ipaddr):
         r = requests.get(
             IPINFO_API_ENDPOINT % ipaddr, timeout=DEFAULT_REQUEST_TIMEOUT
@@ -197,7 +182,9 @@ def get_ip_info(ipaddr: str) -> Optional[dict]:
 def get_aws_ip_ranges() -> Optional[Dict[str, Any]]:
     """Get the public ip ranges for AWS services."""
     try:
-        r = requests.get(AWS_IP_RANGES_ENDPOINT, timeout=DEFAULT_REQUEST_TIMEOUT)
+        r = requests.get(
+            AWS_IP_RANGES_ENDPOINT, timeout=DEFAULT_REQUEST_TIMEOUT
+        )
         r.raise_for_status()
         result = r.json()
         cidrs = []
@@ -237,7 +224,7 @@ def get_cloudflare_range(endpoint: str) -> Optional[List[str]]:
     try:
         r = requests.get(endpoint, timeout=DEFAULT_REQUEST_TIMEOUT)
         r.raise_for_status()
-        subnets = [l for l in r.text.split("\n") if l.strip() != ""]
+        subnets = [line for line in r.text.split("\n") if line.strip() != ""]
         results.extend(subnets)
     except requests.exceptions.HTTPError:
         pass

@@ -1,18 +1,16 @@
 """Command-line script for checking ip address info."""
 import sys
-import click
 from typing import Tuple
 
+import click
+
+from .commons import common_options, extract_ip_addrs, parse_input_methods
 from .constants import HELP_SHORT_TEXT, NO_ARGS_TEXT
-from .commons import (
-    common_options,
-    parse_input_methods,
-    extract_ip_addrs,
-)
 from .ipaddr import get_ip_info, is_private_ip
 
 
-PRIVATE_IP_SKIP_MESSAGE = 'Skipped, private ip address.'
+PRIVATE_IP_SKIP_MESSAGE = "Skipped, private ip address."
+
 
 @common_options(
     name="ipcheck",

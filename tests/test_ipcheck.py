@@ -1,14 +1,8 @@
 """Test suite for ipcheck command."""
-import os
 import unittest
-from typing import List, Optional, Tuple, Union
+from unittest.mock import patch
 
-from unittest.mock import MagicMock, Mock, patch
-from click.testing import CliRunner
-from valkyrie_tools.ipcheck import (
-    PRIVATE_IP_SKIP_MESSAGE,
-    cli,
-)
+from valkyrie_tools.ipcheck import PRIVATE_IP_SKIP_MESSAGE, cli
 
 from .test_base_command import BaseCommandTest
 
@@ -33,7 +27,7 @@ class TestIpcheck(BaseCommandTest, unittest.TestCase):
     def test_successful(self):
         """Test for success."""
         # Mock the arguments
-        mock_ip = "0.0.0.0"
+        mock_ip = "1.1.1.1"
         # Run the command
         result = self.runner.invoke(self.command, [mock_ip])
         # Assert the result

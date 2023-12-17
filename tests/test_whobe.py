@@ -1,13 +1,11 @@
 """Unittests for the whobe cli command."""
 import unittest
-from unittest.mock import Mock, patch
+from unittest.mock import patch
+
 from click.testing import CliRunner
 
-from valkyrie_tools.whobe import (
-    NO_WHOIS_MSG,
-    cli,
-    print_ip_whois,
-)
+from valkyrie_tools.whobe import NO_WHOIS_MSG, cli, print_ip_whois
+
 from .test_base_command import BaseCommandTest
 
 
@@ -53,15 +51,13 @@ class TestWhobe(BaseCommandTest, unittest.TestCase):
     command = cli
 
     def setUp(self) -> None:
+        """Set up test fixtures, if any."""
         super().setUp()
 
-        """Set up test fixtures, if any."""
-        self.mock_whois_data = dict(
-            [(key, "Hello, World!") for key in whois_keys]
-        )
-        self.mock_whois_ip_data = dict(
-            [(key, "Hello, World!") for key in whois_ip_keys]
-        )
+        self.mock_whois_data = {key: "Hello, World!" for key in whois_keys}
+        self.mock_whois_ip_data = {
+            key: "Hello, World!" for key in whois_ip_keys
+        }
         self.mock_whois_ip_data["nets"] = []
 
     def tearDown(self) -> CliRunner:
@@ -136,6 +132,7 @@ class TestWhobe(BaseCommandTest, unittest.TestCase):
 
     @patch("valkyrie_tools.whobe.click.echo")
     def test_print_ip_whois_with_no_data(self, mock_echo):
+        """Test print_ip_whois with no data."""
         # Arrange
         mock_whois_data = None
         mock_expected_output = "No whois data."

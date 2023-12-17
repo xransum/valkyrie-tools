@@ -1,20 +1,18 @@
 """Whobe command-line script."""
 import sys
-import click
-from typing import Any, Tuple, Dict, Optional
+from typing import Any, Dict, Optional, Tuple
 
-from .constants import HELP_SHORT_TEXT, NO_ARGS_TEXT
+import click
+
 from .commons import (
     common_options,
     extract_domains,
     extract_ip_addrs,
     parse_input_methods,
 )
+from .constants import HELP_SHORT_TEXT, NO_ARGS_TEXT
 from .ipaddr import get_net_size, is_valid_ip_addr
-from .whois import (
-    get_whois,
-    get_ip_whois,
-)
+from .whois import get_ip_whois, get_whois
 
 
 NO_WHOIS_MSG = "No whois data"

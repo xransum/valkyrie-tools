@@ -2,15 +2,16 @@
 
 Inherited unittest class mixin imported from command test suites.
 """
-import unittest
+from unittest.mock import patch
+
 from click.testing import CliRunner
-from unittest.mock import MagicMock, Mock, patch
 
 from valkyrie_tools.constants import INTERACTIVE_MODE_PROMPT, NO_ARGS_TEXT
 
 
 class BaseCommandTest:
     """Base test case for commands with shared args and flags."""
+
     # Overridden in subclasses
     command = None
 

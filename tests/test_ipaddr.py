@@ -1,36 +1,33 @@
+"""Test suite for the ipaddr module."""
 import unittest
-from unittest.mock import patch, MagicMock, Mock
-import requests
-from ipaddress import AddressValueError
+from unittest.mock import MagicMock, Mock, patch
 
+import requests
 
 from valkyrie_tools.constants import DEFAULT_REQUEST_TIMEOUT
-from unittest.mock import patch
-from valkyrie_tools.ipaddr import is_aws_ip_addr
 from valkyrie_tools.ipaddr import (
-    TOR_PROJECT_NODE_ENDPOINT,
-    IPINFO_API_ENDPOINT,
     AWS_IP_RANGES_ENDPOINT,
-    CLOUDFLARE_IPS_BASE_ENDPOINT,
     CLOUDFLARE_IPV4_RANGES_ENDPOINT,
     CLOUDFLARE_IPV6_RANGES_ENDPOINT,
     FASTLY_IP_RANGES_ENDPOINT,
+    IPINFO_API_ENDPOINT,
+    TOR_PROJECT_NODE_ENDPOINT,
+    get_aws_ip_ranges,
+    get_cloudflare_ip_ranges,
+    get_cloudflare_range,
+    get_fastly_ip_ranges,
+    get_ip_info,
+    get_net_size,
+    get_tor_node_ip_addrs,
+    is_aws_ip_addr,
+    is_cloudflare_ip_addr,
+    is_fastly_ip_addr,
+    is_ip_in_cidr,
+    is_ip_tor_node,
     is_ipv4_addr,
     is_ipv6_addr,
-    is_valid_ip_addr,
     is_private_ip,
-    get_net_size,
-    is_ip_in_cidr,
-    get_tor_node_ip_addrs,
-    is_ip_tor_node,
-    get_ip_info,
-    get_aws_ip_ranges,
-    is_aws_ip_addr,
-    get_cloudflare_range,
-    get_cloudflare_ip_ranges,
-    is_cloudflare_ip_addr,
-    get_fastly_ip_ranges,
-    is_fastly_ip_addr,
+    is_valid_ip_addr,
 )
 
 
@@ -208,141 +205,86 @@ class TestIsValidIpAddr(unittest.TestCase):
 class TestIsPrivateIp(unittest.TestCase):
     """Test the is_private_ip function."""
 
-    def test_private_ipv4_in_cidr_range(self):
+    def test_is_private_ipv4_in_cidr_range(self):
         """True a private IPv4 address in a private CIDR range."""
         ipaddr = "192.168.0.1"
         result = is_private_ip(ipaddr)
         self.assertTrue(result)
 
-    def test_private_ipv6_in_cidr_range(self):
+    def test_is_private_ipv6_in_cidr_range(self):
         """True a private IPv6 address in a private CIDR range."""
         ipaddr = "fd00::1"
         result = is_private_ip(ipaddr)
         self.assertTrue(result)
 
-    def test_public_ipv4_address(self):
+    def test_is_public_ipv4_address(self):
         """False a public IPv4 address."""
         ipaddr = "8.8.8.8"
         result = is_private_ip(ipaddr)
         self.assertFalse(result)
 
-    def test_ipv4_not_in_cidr_range(self):
+    def test_is_ipv4_not_in_cidr_range(self):
         """False an IPv4 address that is not in a private CIDR range."""
         ipaddr = "123.123.123.123"
         result = is_private_ip(ipaddr)
         self.assertFalse(result)
 
-    def test_ipv6_not_in_cidr_range(self):
+    def test_is_ipv6_not_in_cidr_range(self):
         """False an IPv6 address that is not in a private CIDR range."""
         ipaddr = "2001:db8::1"
         result = is_private_ip(ipaddr)
         self.assertFalse(result)
 
-    def test_ipv4_mapped_ipv6_not_in_cidr_range(self):
+    def test_is_ipv4_mapped_ipv6_not_in_cidr_range(self):
         """False an IPv4-mapped IPv6 address not in a private CIDR range."""
         ipaddr = "::ffff:192.0.2.1"
         result = is_private_ip(ipaddr)
         self.assertFalse(result)
 
-    def test_private_ipv4_in_cidr_range(self):
-        """True a private IPv4 address in a private CIDR range."""
-        ipaddr = "192.168.0.1"
-        result = is_private_ip(ipaddr)
-        self.assertTrue(result)
-
-    def test_private_ipv6_in_cidr_range(self):
-        """True a private IPv6 address in a private CIDR range."""
-        ipaddr = "fd00::1"
-        result = is_private_ip(ipaddr)
-        self.assertTrue(result)
-
-    def test_invalid_ip_address(self):
+    def test_is_invalid_ip_address(self):
         """False an invalid IP address string."""
         ipaddr = "invalid_ip_address"
         result = is_private_ip(ipaddr)
         self.assertFalse(result)
 
-    def test_returns_false_for_public_ipv6_address(self):
+    def test_is_returns_false_for_public_ipv6_address(self):
         """False a public IPv6 address."""
         ipaddr = "2001:0db8:85a3:0000:0000:8a2e:0370:7334"
         result = is_private_ip(ipaddr)
         self.assertFalse(result)
 
-    def test_returns_false_for_public_ipv4_address(self):
+    def test_is_returns_false_for_public_ipv4_address(self):
         """False a public IPv4 address."""
         ipaddr = "203.0.113.1"
         result = is_private_ip(ipaddr)
         self.assertFalse(result)
 
-    def test_returns_false_for_non_private_ipv4_address(self):
+    def test_is_returns_false_for_non_private_ipv4_address(self):
         """False an IPv4 address that is not in a private CIDR range."""
         ipaddr = "100.1.23.1"
         result = is_private_ip(ipaddr)
         self.assertFalse(result)
 
-    def test_ipv6_not_in_cidr_range(self):
-        """False an IPv6 address that is not in a private CIDR range."""
-        ipaddr = "2001:0db8:85a3:0000:0000:8a2e:0370:7334"
-        result = is_private_ip(ipaddr)
-        self.assertFalse(result)
-
-    def test_ipv4_mapped_ipv6_not_in_cidr_range(self):
-        """False an IPv4-mapped IPv6 address not in a private CIDR range."""
-        ipaddr = "::ffff:192.0.2.1"
-        result = is_private_ip(ipaddr)
-        self.assertFalse(result)
-
-    # False an IPv6 address a zone identifier that is not in a
-    def test_ipv6_with_zone_identifier_not_in_private_cidr_range(self):
-        """False an IPv6 address a zone identifier not in a private"""
+    def test_is_ipv6_with_zone_identifier_not_in_private_cidr_range(self):
+        """False an IPv6 address a zone identifier not in a private."""
         ipaddr = "2001:db8::1%eth0"
         result = is_private_ip(ipaddr)
         self.assertFalse(result)
 
-    def test_private_ipv4_in_cidr_range(self):
-        """Alt 1: Test a private IPv4 address in a private CIDR range."""
-        ipaddr = "192.168.0.1"
-        result = is_private_ip(ipaddr)
-        self.assertTrue(result)
-
-    def test_private_ipv4_in_cidr_range(self):
-        """Alt 2: Test a different private IPv4 address in a private CIDR range."""
-        ipaddr = "192.168.0.1"
-        result = is_private_ip(ipaddr)
-        self.assertTrue(result)
-
-    def test_private_ipv4_in_different_cidr_range(self):
+    def test_is_private_ipv4_in_different_cidr_range(self):
         """Alt 3: Test a private IPv4 address in a different private CIDR range."""
         ipaddr = "172.16.0.1"
         result = is_private_ip(ipaddr)
         self.assertTrue(result)
 
-    def test_private_ipv4_in_multiple_cidr_ranges(self):
+    def test_is_private_ipv4_in_multiple_cidr_ranges(self):
         """Alt 4: Test a private IPv4 address in multiple private CIDR ranges."""
         ipaddr = "192.168.0.1"
         result = is_private_ip(ipaddr)
         self.assertTrue(result)
 
-    def test_private_ipv6_in_cidr_range(self):
-        """Alt 1: Test a private IPv6 address in a private CIDR range."""
-        ipaddr = "fd00::1"
-        result = is_private_ip(ipaddr)
-        self.assertTrue(result)
-
-    def test_private_ipv6_in_cidr_range(self):
-        """Alt 2: Test a different private IPv6 address in a private CIDR range."""
-        ipaddr = "fd00::1"
-        result = is_private_ip(ipaddr)
-        self.assertTrue(result)
-
-    def test_private_ipv6_in_different_cidr_range(self):
+    def test_is_private_ipv6_in_different_cidr_range(self):
         """Alt 3: Test a private IPv6 address in a different private CIDR range."""
-        ipaddr = "fd00::1"
-        result = is_private_ip(ipaddr)
-        self.assertTrue(result)
-
-    def test_private_ipv6_in_multiple_cidr_ranges(self):
-        """Alt 4: Test a private IPv6 address in multiple private CIDR ranges."""
         ipaddr = "fd00::1"
         result = is_private_ip(ipaddr)
         self.assertTrue(result)
@@ -367,20 +309,22 @@ class TestGetNetSize(unittest.TestCase):
 
 
 class TestIsIpInCidr(unittest.TestCase):
+    """Test suite for is_ip_in_cidr function."""
+
     def test_valid_ip_in_cidr(self):
-        """Test a valid IP in CIDR"""
+        """Test a valid IP in CIDR."""
         self.assertTrue(is_ip_in_cidr("192.168.1.1", "192.168.1.0/24"))
 
     def test_valid_ip_not_in_cidr(self):
-        """Test a valid IP not in CIDR"""
+        """Test a valid IP not in CIDR."""
         self.assertFalse(is_ip_in_cidr("192.168.2.1", "192.168.1.0/24"))
 
     def test_invalid_ip(self):
-        """Test an invalid IP"""
+        """Test an invalid IP."""
         self.assertFalse(is_ip_in_cidr("999.999.999.999", "192.168.1.0/24"))
 
     def test_invalid_cidr(self):
-        """Test an invalid CIDR"""
+        """Test an invalid CIDR."""
         self.assertFalse(is_ip_in_cidr("192.168.1.1", "999.999.999.999/24"))
 
 
@@ -422,7 +366,7 @@ class TestGetIpInfo(unittest.TestCase):
 
     @patch("valkyrie_tools.ipaddr.requests.get")
     def test_exception_on_status(self, mock_get):
-        # Mock an error response
+        """Mock an error response."""
         mock_ip = "192.168.1.1"
         mock_response = MagicMock()
         mock_response.status_code = 404
@@ -435,7 +379,7 @@ class TestGetIpInfo(unittest.TestCase):
 
         # Call the function that makes the request
         with self.assertRaises(requests.exceptions.HTTPError):
-            result = get_ip_info(mock_ip)
+            get_ip_info(mock_ip)
 
         # Assertions
         mock_get.assert_called_once_with(
@@ -458,9 +402,7 @@ class TestGetTorNodeIpAddrs(unittest.TestCase):
 
     @patch("valkyrie_tools.ipaddr.requests.get")
     def test_get_tor_node_ip_addrs(self, mock_get):
-        """
-        Test get_tor_node_ip_addrs function.
-        """
+        """Test get_tor_node_ip_addrs function."""
         # Arrange
         mock_results = ["1.2.3.4", "5.6.7.8"]
         mock_text = "\n".join(mock_results)
@@ -506,33 +448,6 @@ class TestGetTorNodeIpAddrs(unittest.TestCase):
 class TestIsIpTorNode(unittest.TestCase):
     """Test the is_ip_tor_node function."""
 
-    @patch("valkyrie_tools.ipaddr.get_tor_node_ip_addrs")
-    def test_is_ip_tor_node(self, mock_get_tor_node_ip_addrs):
-        """Test the is_ip_tor_node function."""
-        # Arrange
-        mock_results = ["1.2.3.4", "5.6.7.8"]
-        mock_get_tor_node_ip_addrs.return_value = mock_results
-
-        # Act
-        result = is_ip_tor_node(mock_results[-1])
-
-        # Assert
-        self.assertTrue(result)
-
-    @patch("valkyrie_tools.ipaddr.get_tor_node_ip_addrs")
-    def test_is_ip_tor_node_false(self, mock_get_tor_node_ip_addrs):
-        """Test the is_ip_tor_node function."""
-        # Arrange
-        mock_get_tor_node_ip_addrs.return_value = ["1.2.3.4", "5.6.7.8"]
-
-        # Act
-        result = is_ip_tor_node("0.0.0.0")
-
-        # Assert
-        self.assertFalse(result)
-
-
-class TestIsIpTorNode(unittest.TestCase):
     @patch(
         "valkyrie_tools.ipaddr.get_tor_node_ip_addrs"
     )  # replace 'module_name' with the name of your module
@@ -648,9 +563,7 @@ class TestIsAwsIpAddr(unittest.TestCase):
     """Test the is_aws_ip_addr function."""
 
     def setUp(self) -> None:
-        """
-        Set up test fixtures, if any.
-        """
+        """Set up test fixtures, if any."""
         self.mock_results = [
             "192.0.2.0/24",
             "198.51.100.0/24",
@@ -740,24 +653,17 @@ class TestGetCloudflareRange(unittest.TestCase):
 
 
 class TestGetCloudflareIpRanges(unittest.TestCase):
-    """
-    Test class for the get_cloudflare_ip_ranges function.
-    """
+    """Test class for the get_cloudflare_ip_ranges function."""
 
     def setUp(self) -> None:
-        """
-        Set up test fixtures, if any.
-        """
+        """Set up test fixtures, if any."""
         self.mock_ipv4_result = ["192.0.2.0/24", "198.51.100.0/24"]
         self.mock_ipv6_result = ["2001:db8::/32", "2001:db8:1234:5678::/64"]
         get_cloudflare_ip_ranges.clear_cache()
 
     @patch("valkyrie_tools.ipaddr.get_cloudflare_range")
     def test_get_cloudflare_ip_ranges_success(self, mock_get_cloudflare_range):
-        """
-        Test get_cloudflare_ip_ranges function when it successfully retrieves IP
-        ranges.
-        """
+        """Test function when it successfully retrieves IP ranges."""
         # Arrange
         mock_results = [self.mock_ipv4_result[:], self.mock_ipv6_result[:]]
         mock_get_cloudflare_range.side_effect = mock_results
@@ -770,9 +676,7 @@ class TestGetCloudflareIpRanges(unittest.TestCase):
 
     @patch("valkyrie_tools.ipaddr.get_cloudflare_range")
     def test_get_cloudflare_ip_ranges_failure(self, mock_get_cloudflare_range):
-        """
-        Test get_cloudflare_ip_ranges function when it fails to retrieve IP ranges.
-        """
+        """Test function when it fails to retrieve IP ranges."""
         # Arrange
         mock_get_cloudflare_range.return_value = []
         # Act
@@ -787,9 +691,7 @@ class TestGetCloudflareIpRanges(unittest.TestCase):
 
     @patch("valkyrie_tools.ipaddr.requests.get")
     def test_clear_cache(self, mock_get):
-        """
-        Test clearing the cache for get_cloudflare_ip_ranges.
-        """
+        """Test clearing the cache for get_cloudflare_ip_ranges."""
         # Act
         get_cloudflare_ip_ranges.clear_cache()
 
@@ -802,9 +704,7 @@ class TestIsCloudflareIpAddr(unittest.TestCase):
     """Test the is_cloudflare_ip_addr function."""
 
     def setUp(self) -> None:
-        """
-        Set up test fixtures, if any.
-        """
+        """Set up test fixtures, if any."""
         self.mock_ipv4_result = ["192.0.2.0/24", "198.51.100.0/24"]
         self.mock_ipv6_result = ["2001:db8::/32", "2001:db8:1234:5678::/64"]
         self.mock_results = [
@@ -850,20 +750,16 @@ class TestIsCloudflareIpAddr(unittest.TestCase):
         mock = Mock(side_effect=ValueError("foo"))
         mock_ipaddress.ip_address.side_effect = mock
         # Act
-        result = is_cloudflare_ip_addr("0.0.0.0")
+        result = is_cloudflare_ip_addr("1.1.1.1")
         # Assert
         self.assertFalse(result)
 
 
 class TestGetFastlyIpRanges(unittest.TestCase):
-    """
-    Test class for the get_fastly_ip_ranges function.
-    """
+    """Test class for the get_fastly_ip_ranges function."""
 
     def setUp(self) -> None:
-        """
-        Set up test fixtures, if any.
-        """
+        """Set up test fixtures, if any."""
         self.mock_ipv4_result = ["192.0.2.0/24", "198.51.100.0/24"]
         self.mock_ipv6_result = ["2001:db8::/32", "2001:db8:1234:5678::/64"]
         self.mock_results = {
@@ -874,10 +770,7 @@ class TestGetFastlyIpRanges(unittest.TestCase):
 
     @patch("valkyrie_tools.ipaddr.requests.get")
     def test_get_fastly_ip_ranges_success(self, mock_get):
-        """
-        Test get_fastly_ip_ranges function when it successfully retrieves IP
-        ranges.
-        """
+        """Test get_fastly_ip_ranges function successfully retrieves IP."""
         # Arrange
         mock_get.return_value.json.side_effect = [self.mock_results]
         # Act
@@ -887,9 +780,7 @@ class TestGetFastlyIpRanges(unittest.TestCase):
 
     @patch("valkyrie_tools.ipaddr.requests.get")
     def test_get_fastly_ip_ranges_failure(self, mock_get):
-        """
-        Test get_fastly_ip_ranges function when it fails to retrieve IP ranges.
-        """
+        """Test get_fastly_ip_ranges function fails to retrieve IP ranges."""
         # Arrange
         mock_response = MagicMock()
         mock_response.raise_for_status.side_effect = (
@@ -909,9 +800,7 @@ class TestGetFastlyIpRanges(unittest.TestCase):
 
     @patch("valkyrie_tools.ipaddr.requests.get")
     def test_clear_cache(self, mock_get):
-        """
-        Test clearing the cache for get_fastly_ip_ranges.
-        """
+        """Test clearing the cache for get_fastly_ip_ranges."""
         # Act
         get_fastly_ip_ranges.clear_cache()
         # Assert
@@ -922,9 +811,7 @@ class TestIsFastlyIpAddr(unittest.TestCase):
     """Test the is_fastly_ip_addr function."""
 
     def setUp(self) -> None:
-        """
-        Set up test fixtures, if any.
-        """
+        """Set up test fixtures, if any."""
         self.mock_results = [
             "192.0.2.0/24",
             "198.51.100.0/24",
