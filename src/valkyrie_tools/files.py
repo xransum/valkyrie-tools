@@ -2,6 +2,7 @@
 import os
 from typing import Optional, Union
 
+
 __all__ = [
     "path_exists",
     "is_binary_file",
