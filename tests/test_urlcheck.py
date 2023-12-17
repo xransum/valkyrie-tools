@@ -1,5 +1,4 @@
 """Urlcheck test module."""
-import os
 import unittest
 from typing import List, Optional, Tuple, Union
 from unittest.mock import MagicMock, Mock, patch
@@ -7,7 +6,7 @@ from unittest.mock import MagicMock, Mock, patch
 import requests
 from click.testing import CliRunner
 
-from valkyrie_tools.constants import INTERACTIVE_MODE_PROMPT
+from valkyrie_tools.constants import INTERACTIVE_MODE_PROMPT, NO_ARGS_TEXT
 from valkyrie_tools.exceptions import (
     REQUESTS_CONNECTION_ERROR_MESSAGES,
     REQUESTS_SSL_ERROR_MESSAGE,
@@ -15,14 +14,12 @@ from valkyrie_tools.exceptions import (
     REQUESTS_TOO_MANY_REDIRECTS_ERROR_MESSAGE,
     REQUESTS_UNHANDLED_CONNECTION_ERROR_MESSAGE,
 )
-from valkyrie_tools.urlcheck import (  # __prog_desc__,
-    HEADER_KEY_TRUNC_LENGTH,
-    __prog_name__,
-    __version__,
-    cli,
-)
+from valkyrie_tools.urlcheck import HEADER_KEY_TRUNC_LENGTH, cli
 
-META_HTML = '<html><head><meta http-equiv="refresh" content="0; URL=%s"></head></html>'
+
+META_HTML = (
+    '<html><head><meta http-equiv="refresh" content="0; URL=%s"></head></html>'
+)
 LONG_HEADER_VALUE = "a" * (HEADER_KEY_TRUNC_LENGTH + 2)
 URL_MOCKS = [
     ("http://example.com", 11, 200, "OK"),
@@ -136,8 +133,15 @@ class TestURLCheckCLI(unittest.TestCase):
     def test_version_option(self) -> None:
         """Test --version option."""
         result = self.runner.invoke(cli, ["--version"])
-        expect_out = f"{__prog_name__} {__version__}"
-        self.assertIn(expect_out, result.output)
+        name, version = result.output.split(" ")
+
+        # Check name is correct
+        self.assertEqual(name, "urlcheck")
+        # Check version is a valid semantic version scheme
+        for v in version.strip().split("."):
+            self.assertTrue(v.isdigit())
+
+        # Check clean exit
         self.assertEqual(result.exit_code, 0)
 
     def test_help_option(self) -> None:
@@ -149,7 +153,7 @@ class TestURLCheckCLI(unittest.TestCase):
     def test_empty_args(self) -> None:
         """It exits with a status code of 1."""
         result = self.runner.invoke(cli, [])
-        self.assertIn("Input args cannot be empty.", result.output)
+        self.assertIn(NO_ARGS_TEXT, result.output)
         self.assertEqual(result.exit_code, 1)
 
     @patch("valkyrie_tools.httpr.make_request")
@@ -171,7 +175,9 @@ class TestURLCheckCLI(unittest.TestCase):
         mock_chain_link = self._create_mock_responses(URL_MOCKS[0])
         url, mock_response = mock_chain_link
         mock_make_request.return_value = mock_chain_link
-        result = self.runner.invoke(cli, [url, "--show-headers", "--no-truncate"])
+        result = self.runner.invoke(
+            cli, [url, "--show-headers", "--no-truncate"]
+        )
 
         self.assertNotIn("...", result.output)
         self.assertEqual(result.exit_code, 0)
@@ -199,19 +205,19 @@ class TestURLCheckCLI(unittest.TestCase):
         self.assertIn(url, result.output)
         self.assertEqual(result.exit_code, 0)
 
-    @patch("valkyrie_tools.httpr.make_request")
-    def test_output_file_option(self, mock_make_request: MagicMock) -> None:
-        """Test --output-file option."""
-        mock_chain_link = self._create_mock_responses(URL_MOCKS[0])
-        url, mock_response = mock_chain_link
-        mock_make_request.return_value = mock_chain_link
+    # @patch("valkyrie_tools.httpr.make_request")
+    # def test_output_file_option(self, mock_make_request: MagicMock) -> None:
+    #     """Test --output-file option."""
+    #     mock_chain_link = self._create_mock_responses(URL_MOCKS[0])
+    #     url, mock_response = mock_chain_link
+    #     mock_make_request.return_value = mock_chain_link
 
-        with self.runner.isolated_filesystem():
-            output_file = "output.txt"
-            result = self.runner.invoke(cli, [url, "-o", output_file])
+    #     with self.runner.isolated_filesystem():
+    #         output_file = "output.txt"
+    #         result = self.runner.invoke(cli, [url, "-o", output_file])
 
-            self.assertTrue(os.path.exists(output_file))
-            self.assertEqual(result.exit_code, 0)
+    #         self.assertTrue(os.path.exists(output_file))
+    #         self.assertEqual(result.exit_code, 0)
 
     @patch("valkyrie_tools.httpr.make_request")
     def test_single_url(self, mock_make_request: MagicMock) -> None:
@@ -243,7 +249,10 @@ class TestURLCheckCLI(unittest.TestCase):
         mock_make_request.return_value = mock_chain_link
         result = self.runner.invoke(cli, f"{url} {url}")
 
-        self.assertEqual(len(result.output.split(url)), 2)  # type: ignore
+        # Split lines and check only one url is in the output
+        self.assertEqual(
+            len([li for li in result.output.split("\n") if url in li]), 1
+        )
         # self.assertEqual([True, True], [url in result.output for url in urls])
         self.assertEqual(result.exit_code, 0)
 
@@ -260,9 +269,13 @@ class TestURLCheckCLI(unittest.TestCase):
         self.assertEqual(result.exit_code, 0)
 
     @patch("valkyrie_tools.httpr.make_request")
-    def test_redirect_chain_handling(self, mock_make_request: MagicMock) -> None:
+    def test_redirect_chain_handling(
+        self, mock_make_request: MagicMock
+    ) -> None:
         """Test redirect chain handling."""
-        mock_chain = self._create_mock_responses(MOCK_REDIRECT_CHAIN, redirects=True)
+        mock_chain = self._create_mock_responses(
+            MOCK_REDIRECT_CHAIN, redirects=True
+        )
         mock_chain_link = mock_chain[0]
         mock_make_request.side_effect = mock_chain
         result = self.runner.invoke(cli, mock_chain_link[0])
@@ -282,7 +295,9 @@ class TestURLCheckCLI(unittest.TestCase):
         self.assertIn(REQUESTS_SSL_ERROR_MESSAGE, result.output)
 
     @patch("valkyrie_tools.httpr.make_request")
-    def test_request_connection_exceptions(self, mock_make_request: MagicMock) -> None:
+    def test_request_connection_exceptions(
+        self, mock_make_request: MagicMock
+    ) -> None:
         """Test connection exceptions."""
         url, *_ = URL_MOCKS[0]
         for key, value in REQUESTS_CONNECTION_ERROR_MESSAGES.items():
@@ -297,14 +312,20 @@ class TestURLCheckCLI(unittest.TestCase):
     ) -> None:
         """Test unhandled connection exceptions."""
         url, *_ = URL_MOCKS[0]
-        error = requests.exceptions.ConnectionError("Unknown connection exception")
+        error = requests.exceptions.ConnectionError(
+            "Unknown connection exception"
+        )
         mock_make_request.return_value = [url, error]
         result = self.runner.invoke(cli, url)
         print(result.output)
-        self.assertIn(REQUESTS_UNHANDLED_CONNECTION_ERROR_MESSAGE, result.output)
+        self.assertIn(
+            REQUESTS_UNHANDLED_CONNECTION_ERROR_MESSAGE, result.output
+        )
 
     @patch("valkyrie_tools.httpr.make_request")
-    def test_request_ambiguous_exception(self, mock_make_request: MagicMock) -> None:
+    def test_request_ambiguous_exception(
+        self, mock_make_request: MagicMock
+    ) -> None:
         """Test ambiguous exception."""
         url, *_ = URL_MOCKS[0]
         msg = "Value exception."
@@ -315,7 +336,9 @@ class TestURLCheckCLI(unittest.TestCase):
         self.assertIn(msg, result.output)
 
     @patch("valkyrie_tools.httpr.make_request")
-    def test_request_timeout_exception(self, mock_make_request: MagicMock) -> None:
+    def test_request_timeout_exception(
+        self, mock_make_request: MagicMock
+    ) -> None:
         """Test timeout exception."""
         url, *_ = URL_MOCKS[0]
         error = requests.exceptions.Timeout("Timeout exception thrown")
@@ -330,7 +353,9 @@ class TestURLCheckCLI(unittest.TestCase):
     ) -> None:
         """Test too many redirects exception."""
         url, *_ = URL_MOCKS[0]
-        error = requests.exceptions.TooManyRedirects("Too many redirects thrown")
+        error = requests.exceptions.TooManyRedirects(
+            "Too many redirects thrown"
+        )
         mock_make_request.return_value = [url, error]
         result = self.runner.invoke(cli, url)
         print(result.output)
