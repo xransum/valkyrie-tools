@@ -7,6 +7,7 @@ from valkyrie_tools.logger import (
     setup_logger,
 )
 
+
 logger = setup_logger(0)
 
 
@@ -37,7 +38,9 @@ def test_get_log_level_out_of_range() -> None:
     # Last value should be DEBUG
     levels_count = len(log_levels)
     set_log_level(logger, levels_count - 1)
-    assert int(get_verbosity(len(log_levels) - 1)) == int(log_levels[levels_count - 1])
+    assert int(get_verbosity(len(log_levels) - 1)) == int(
+        log_levels[levels_count - 1]
+    )
 
 
 def test_setup_logger() -> None:

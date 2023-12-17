@@ -1,6 +1,7 @@
 """Logger module."""
 import logging
 
+
 __all__ = [
     "logging",
     "log_message_format",
@@ -22,7 +23,9 @@ def get_verbosity(verbose: int) -> int:
     """Log level getter function."""
     # Define log level based on verbosity count
     log_level = int(
-        log_levels[min(verbose, len(log_levels) - 1)]  # Max verbosity is DEBUG (3)
+        log_levels[
+            min(verbose, len(log_levels) - 1)
+        ]  # Max verbosity is DEBUG (3)
     )
     # Set log level
     return log_level
