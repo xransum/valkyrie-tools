@@ -10,6 +10,7 @@ from bs4 import BeautifulSoup
 from requests import Response
 from requests.packages.urllib3.exceptions import InsecureRequestWarning
 
+
 # Suppress insecure request warnings
 warnings.simplefilter("ignore", InsecureRequestWarning)
 
@@ -232,7 +233,9 @@ def build_redirect_chain(
                             next_url = extract_redirects_from_html_meta(soup)
 
                             if next_url is not None:
-                                current_url = build_full_url(current_url, next_url)
+                                current_url = build_full_url(
+                                    current_url, next_url
+                                )
                             else:
                                 current_url = None
                         else:
