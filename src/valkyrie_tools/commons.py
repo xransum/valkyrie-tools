@@ -2,148 +2,346 @@
 import os
 import re
 import sys
-from typing import List, Optional, Union
+from functools import wraps
+from typing import List, Optional, Tuple, Union
 
 import click
 from art import text2art
 
-from .constants import INTERACTIVE_MODE_PROMPT
-from .files import read_file
+from .constants import (
+    DOMAIN_REGEX,
+    EMAIL_ADDR_REGEX,
+    INTERACTIVE_MODE_PROMPT,
+    IPV4_REGEX,
+    IPV6_REGEX,
+    URL_REGEX,
+)
+from .files import is_binary_file
+
 
 __all__ = [
-    "URL_REGEX",
-    "DOMAIN_REGEX",
-    "EMAIL_ADDR_REGEX",
-    "IPV4_ADDR_REGEX",
-    "IPV6_ADDR_REGEX",
-    "sys_exit",
-    "handle_value_argument",
-    "read_value_from_input",
+    "common_options",
+    "print_version",
+    "parse_input_methods",
+    "extract_domains",
+    "extract_ipv4_addrs",
+    "extract_ipv6_addrs",
+    "extract_ip_addrs",
+    "extract_emails",
+    "extract_urls",
 ]
 
-URL_REGEX = re.compile(
-    r"(?:(?:https?|ftp|file):\/\/|www\.|ftp\.)(?:\([-A-Z0-9+&@#\/%=~_|$?!:,.]*\)|"
-    + r"[-A-Z0-9+&@#\/%=~_|$?!:,.])*(?:\([-A-Z0-9+&@#\/%=~_|$?!:,.]*\)|[A-Z0-9+&@#"
-    + r"\/%=~_|$])",
-    re.I | re.M,
-)
-DOMAIN_REGEX = re.compile(
-    r"((((?!-))[a-zA-Z0-9-]{1,63}(?<!-)\.)+[a-zA-Z]{2,63})\b", re.I | re.M
-)
-EMAIL_ADDR_REGEX = re.compile(
-    r"([a-zA-Z0-9._-]+@((((?!-))[a-zA-Z0-9-]{1,63}(?<!-)\.)+[a-zA-Z]{2,63}))",
-    re.I | re.M,
-)
-IPV4_ADDR_REGEX = re.compile(
-    r"(?:(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.){3}(?:25[0-5]|2[0-4][0-9]|[01]?"
-    + r"[0-9][0-9]?)",
-    re.I | re.M,
-)
-IPV6_ADDR_REGEX = re.compile(
-    r"(?<![:.\w])(?:[A-F0-9]{1,4}:){7}[A-F0-9]{1,4}(?![:.\w])", re.I | re.M
-)
 
+def common_options(
+    name: str,
+    description: str,
+    version: str,
+) -> click.Command:
+    """Decorator to add common options to command-line tools.
 
-def sys_exit(text: str, code: int = 1, help_short: bool = False) -> None:
-    """Exit with error.
+    Allows for built-in command definitions and the flags:
+    -h, --help: Show help message and exit.
+    -V, --version: Show version and exit.
+    -vvv, --verbose: Enable verbose mode.
+    -i, --interactive: Enable interactive mode.
 
     Args:
-        text (str): Error message.
-        code (int): Exit code. Defaults to 1.
-        help_short (bool): Whether to show the short
-            help message. Defaults to False.
-    """
-    click.echo(text, err=True)
-    if help_short:
-        click.echo("Try '--help' for more information", err=True)
-
-    sys.exit(code)
-
-
-def handle_value_argument(
-    value: Union[str, List[str]], input_file: Optional[str]
-) -> Union[str, List[str]]:
-    """Handle the 'value' argument.
-
-    If an input file is passed, then ignore the value. If no input
-    file is given, check if the value is a file or a list of files,
-    if not return value(s) as is.
-
-    Args:
-        value (Union[str, List[str]]): Value passed from the command line.
-        input_file (Optional[str]): Input file.
+        name (str): Name of the command.
+        description (str): Description of the command.
+        version (str): Version of the command in semantic versioning scheme.
 
     Returns:
-        Union[str, List[str]]: Value(s) to process.
+        click.Command: Click command function.
     """
-    # If an input file is provided, read and return its content
-    if input_file is not None:
-        return read_file(input_file)
 
-    # If value is a string, check if it's a file path
-    if isinstance(value, str):
-        if os.path.exists(value):
-            return read_file(value)
-        else:
-            return value
+    def decorator(func: click.Command) -> click.Command:
+        """Bind options to the command function."""
 
-    # If value is a list, iterate over its elements
-    elif isinstance(value, list):
-        values = []
-        for v in value:
-            if os.path.exists(v):
-                values.append(read_file(v))
-            else:
-                values.append(v)
-        return values
+        @click.command(
+            name=name,
+            help=description,
+            context_settings=dict(
+                help_option_names=["-h", "--help"],
+            ),
+            hidden=True,
+        )
+        # @click.option(
+        #     "-i",
+        #     "--input",
+        #     "input",
+        #     type=click.File('rb'),
+        #     default=click.get_binary_stream('stdin'),
+        #     help="Input file.",
+        # )
+        # @click.option(
+        #     "-o",
+        #     "--output",
+        #     "output",
+        #     type=click.File("w", encoding="utf8"),
+        #     help="Output file.",
+        #     # Doesn't work, the click stdout string does not work the same
+        #     # as what's used in the click.s?echo functions.
+        #     # default=click.get_text_stream("stdout"),
+        #     default=None,
+        # )
+        @click.option(
+            "-I",
+            "--interactive",
+            is_flag=True,
+            help="Interactive mode.",
+            default=False,
+        )
+        @click.version_option(
+            version,
+            "-V",
+            "--version",
+            message="%(prog)s %(version)s",
+            help="Show version and exit.",
+        )
+        @click.argument(
+            "values", nargs=-1, type=click.UNPROCESSED, required=False
+        )
+        @wraps(func)
+        def wrapper(*args: List[str], **kwargs: List[str]) -> None:
+            """Ensure decorated function's metadata is preserved."""
+            return func(*args, **kwargs)
 
-    # If value is neither a string nor a list, return it as is
-    else:
-        return value
+        return wrapper
+
+    return decorator
 
 
-def read_value_from_input(
-    values: Optional[Union[str, List[str]]],
-    interactive: bool = False,
-    name: Optional[str] = None,
-) -> List[Union[str, None]]:
-    """Read text from input, handling interactive mode and piped input.
+def print_version(version: str) -> click.core.Command:
+    """Print version and exit.
 
     Args:
-        values (Optional[Union[str, List[str]]]): String or list of strings.
-        interactive (bool): Enable interactive mode. Defaults to False.
-        name (Optional[str], optional): Name of the tool. Defaults to None.
+        version (str): Version of the command in semantic versioning scheme.
 
     Returns:
-        List[Union[str, None]]: List of strings.
+        Callable: Click callback function.
     """
-    # If values is None, set it to empty list
-    if values is None:
-        values = []
 
-    # If values is not list or tuple, convert it to list
-    if isinstance(values, (list, tuple)) is False:
-        values = [values]
+    def echo_version(
+        ctx: click.Context,
+        param: Union[click.Option, click.Parameter],  # noqa: B008
+        value: str,
+    ) -> None:
+        """Print version and exit.
 
-    # Do nothing when values are passed
-    if len(values) == 0:
-        # Command called non-interactively
-        if sys.stdin.isatty() is False:
-            stdin = sys.stdin.read()
+        Args:
+            ctx (click.Context): Click context.
+            param (Union[click.Option, click.Parameter]): Click option or
+                parameter.
+            value (str): Value of the option or parameter.
+        """
+        if not value or ctx.resilient_parsing:
+            return
+
+        click.echo(version)
+        ctx.exit()
+
+    return echo_version
+
+
+def handle_file_input(
+    file_path: str,
+) -> Optional[str]:
+    """Handle file input."""
+    value = None
+
+    # Safely avoid binary files.
+    if is_binary_file(file_path) is True:
+        raise OSError("Binary file provided, not a text file.")
+    # Avoid directories.
+    elif os.path.isdir(file_path) is True:
+        raise OSError("Directory provided, not a file.")
+
+    # Handle as normal file.
+    elif os.path.isfile(file_path) is True:
+        # Read the file, if possible.
+        with open(file_path, encoding="utf-8") as file:
+            value = file.read().strip()
+
+    return value
+
+
+def parse_input_methods(
+    values: Tuple[str, ...],
+    interactive: bool,
+    ctx: click.Context,
+) -> Tuple[str, ...]:
+    """Parse input methods.
+
+    This function will attempt to read from stdin if
+    there's no values provided. If there's a "-" in the
+    values, it will also read from stdin. If there's
+    values provided, it will attempt to read from the
+    file path provided in the values. If there's no file
+    at the path provided, it will just use the value
+    provided.
+
+    Args:
+        values (Tuple[str, ...]): Positional arguments.
+        interactive (bool): Whether to enable interactive mode.
+        ctx (click.Context): Click context.
+
+    Returns:
+        Tuple[str, ...]: Tuple of arguments.
+    """
+    args = ()
+
+    # When interactive is enabled, drop to an input
+    # stream.
+    if interactive is True:
+        # Convert the script name to ascii art as a header
+        # and print it.
+        click.echo(text2art(ctx.command.name))
+
+        # Print the interactive prompt and read from stdin.
+        click.echo(INTERACTIVE_MODE_PROMPT)
+        stdin = sys.stdin.read().strip()
+
+        # Only add the users input if it isn't empty.
+        if stdin != "":
+            values += (stdin,)
+
+    # Check if data is being piped
+    elif sys.stdin.isatty() is False:
+        # Check if there's a "-" in the values
+        if "-" in values:
+            # Before reading from stdin, need to remove the
+            # "-" from the values.
+            values = tuple(v for v in values if v != "-")
+
+        # Read data from pipe
+        values += (sys.stdin.read().strip(),)
+
+    # Iterate over each argument
+    for arg in values:
+        # Avoid empty strings since Path.exists return True
+        # for them.
+        if os.path.exists(arg) is True:
+            arg = handle_file_input(arg)
+            if arg is None:  # pragma: no cover
+                continue
+
+            args += (arg,)
+
+        # Otherwise, tack on the arg to the tuple.
         else:
-            if interactive:
-                if name is not None:
-                    click.echo(text2art(name))
+            args += (arg,)
 
-                click.echo("Interactive mode: ENABLED\n")
-                click.echo(INTERACTIVE_MODE_PROMPT)
-                stdin = sys.stdin.read()
-            else:
-                stdin = None
+    # Remove empty strings from args
+    args = tuple(a for a in args if a != "")
+    return args
 
-        if stdin is not None:
-            values = [stdin.strip()]
-        else:
-            values = []
 
-    return values
+# Regex extract functions
+def _extract_regex(
+    regex: re.Pattern, text: str, key: Optional[str], unique: bool = False
+) -> List[str]:
+    """Extract regex matches from text.
+
+    Args:
+        regex (re.Pattern): Regex pattern to use.
+        text (str): Text to extract regex matches from.
+        key (str, optional): Key to extract from regex match.
+            Defaults to None.
+        unique (bool): Whether to return unique matches only.
+            Defaults to False.
+
+    Returns:
+        List[str]: List of matches.
+    """
+    matches = []
+    for text_match in regex.finditer(text):
+        match = text_match.group(key) if key else text_match.group()
+        if unique and match in matches:
+            continue
+
+        matches.append(match)
+
+    return matches
+
+
+def extract_domains(text: str, unique=False) -> List[str]:
+    """Extract domains from text.
+
+    Args:
+        text (str): Text to extract domains from.
+        unique (bool, optional): Whether to return unique domains only.
+            Defaults to False.
+
+    Returns:
+        List[str]: List of domains.
+    """
+    return _extract_regex(DOMAIN_REGEX, text, "domain", unique)
+
+
+def extract_ipv4_addrs(text: str, unique=False) -> List[str]:
+    """Extract IPv4 addresses from text.
+
+    Args:
+        text (str): Text to extract IPv4 addresses from.
+        unique (bool, optional): Whether to return unique IPv4 addresses only.
+            Defaults to False.
+
+    Returns:
+        List[str]: List of IPv4 addresses.
+    """
+    return _extract_regex(IPV4_REGEX, text, "ipv4", unique)
+
+
+def extract_ipv6_addrs(text: str, unique=False) -> List[str]:
+    """Extract IPv6 addresses from text.
+
+    Args:
+        text (str): Text to extract IPv6 addresses from.
+        unique (bool, optional): Whether to return unique IPv6 addresses only.
+            Defaults to False.
+
+    Returns:
+        List[str]: List of IPv6 addresses.
+    """
+    return _extract_regex(IPV6_REGEX, text, "ipv6", unique)
+
+
+def extract_ip_addrs(text: str, unique=False) -> List[str]:
+    """Extract IPv4 and IPv6 addresses from text.
+
+    Args:
+        text (str): Text to extract IPv4 and IPv6 addresses from.
+        unique (bool, optional): Whether to return unique IPv4 and IPv6
+            addresses only. Defaults to False.
+
+    Returns:
+        List[str]: List of IPv4 and IPv6 addresses.
+    """
+    return extract_ipv4_addrs(text, unique) + extract_ipv6_addrs(text, unique)
+
+
+def extract_emails(text: str, unique=False) -> List[str]:
+    """Extract email addresses from text.
+
+    Args:
+        text (str): Text to extract email addresses from.
+        unique (bool, optional): Whether to return unique email addresses only.
+            Defaults to False.
+
+    Returns:
+        List[str]: List of email addresses.
+    """
+    return _extract_regex(EMAIL_ADDR_REGEX, text, "email", unique)
+
+
+def extract_urls(text: str, unique=False) -> List[str]:
+    """Extract URLs from text.
+
+    Args:
+        text (str): Text to extract URLs from.
+        unique (bool, optional): Whether to return unique URLs only. Defaults to False.
+
+    Returns:
+        List[str]: List of URLs.
+    """
+    return _extract_regex(URL_REGEX, text, "url", unique)

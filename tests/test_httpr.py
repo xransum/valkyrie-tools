@@ -20,8 +20,10 @@ from valkyrie_tools.httpr import (
     make_request,
 )
 
+
 META_REFRESH_HTML = (
-    '<html><head><meta http-equiv="refresh" content="0;URL=\'%s\'" /> </head></html>'
+    '<html><head><meta http-equiv="refresh" content="0;URL=\'%s\'" /> '
+    "</head></html>"
 )
 
 
@@ -223,7 +225,9 @@ class TestExtractRedirectsFromHTMLMeta(unittest.TestCase):
         self: unittest.TestCase,
     ) -> None:
         """Test invalid empty meta refresh content."""
-        html = '<html><head><meta http-equiv="refresh" content=""></head></html>'
+        html = (
+            '<html><head><meta http-equiv="refresh" content=""></head></html>'
+        )
         soup = BeautifulSoup(html, "html.parser")
         result = extract_redirects_from_html_meta(soup)
         self.assertEqual(result, None)
@@ -291,7 +295,9 @@ class TestMakeRequest(unittest.TestCase):
     """Test for valkyrie_tools.httpr.make_request function."""
 
     @patch("valkyrie_tools.httpr.requests.request")
-    def test_successful_request(self: unittest.TestCase, mock_request: Mock) -> None:
+    def test_successful_request(
+        self: unittest.TestCase, mock_request: Mock
+    ) -> None:
         """Test make_request with a successful request."""
         url = "https://example.com"
         method = "GET"
@@ -308,7 +314,9 @@ class TestMakeRequest(unittest.TestCase):
         self.assertEqual(result[1].text, response_data)  # type: ignore
 
     @patch("valkyrie_tools.httpr.requests.request")
-    def test_failed_request(self: unittest.TestCase, mock_request: Mock) -> None:
+    def test_failed_request(
+        self: unittest.TestCase, mock_request: Mock
+    ) -> None:
         """Test make_request with a failed request."""
         url = "https://example.com"
         method = "GET"
@@ -532,7 +540,9 @@ class TestBuildRedirectChain(unittest.TestCase):
     ) -> None:
         """Test build_redirect_chain with DNS resolution failure."""
         url = "https://example.com"
-        mock_make_request.side_effect = [[url, ConnectionError("Failed to resolve")]]
+        mock_make_request.side_effect = [
+            [url, ConnectionError("Failed to resolve")]
+        ]
 
         result = build_redirect_chain("GET", url)
         self.assertEqual(len(result), 1)

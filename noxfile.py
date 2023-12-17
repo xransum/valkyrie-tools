@@ -10,6 +10,7 @@ from typing import Optional
 import nox
 from nox_poetry import Session, session
 
+
 package = "valkyrie_tools"
 python_versions = [
     "3.11",
@@ -89,7 +90,9 @@ def activate_virtualenv_in_precommit_hooks(session: Session) -> None:
         text = hook.read_text()
 
         if not any(
-            Path("A") == Path("a") and bindir.lower() in text.lower() or bindir in text
+            Path("A") == Path("a")
+            and bindir.lower() in text.lower()
+            or bindir in text
             for bindir in bindirs
         ):
             continue
@@ -142,17 +145,26 @@ def safety(session: Session) -> None:
 @session(python=python_versions)
 def mypy(session: Session) -> None:
     """Type-check using mypy."""
-    args = session.posargs or ["src", "tests", "docs/conf.py"]
+    args = session.posargs or [
+        "src",
+        "tests",
+        "docs/conf.py",
+    ]
     session.install(".", "mypy", "pytest", "importlib-metadata")
     session.run("mypy", *args)
     if not session.posargs and session.python == python_versions[0]:
-        session.run("mypy", f"--python-executable={sys.executable}", "noxfile.py")
+        session.run(
+            "mypy", f"--python-executable={sys.executable}", "noxfile.py"
+        )
 
 
 @session
 @nox.parametrize(
     "python,poetry",
-    [(python_versions[0], "1.0.10"), *((python, None) for python in python_versions)],
+    [
+        (python_versions[0], "1.0.10"),
+        *((python, None) for python in python_versions),
+    ],
 )
 def tests(session: Session, poetry: Optional[str]) -> None:
     """Run the test suite."""
@@ -172,7 +184,9 @@ def tests(session: Session, poetry: Optional[str]) -> None:
         )
 
     try:
-        session.run("coverage", "run", "--parallel", "-m", "pytest", *session.posargs)
+        session.run(
+            "coverage", "run", "--parallel", "-m", "pytest", *session.posargs
+        )
     finally:
         if session.interactive:
             session.notify("coverage", posargs=[])

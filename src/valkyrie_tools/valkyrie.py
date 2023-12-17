@@ -1,13 +1,10 @@
 """Command-line interface."""
+from typing import Any, Dict, List
+
 import click
 
 from . import __version__
-from .commons import sys_exit
-
-__all__ = ["__version__"]
-
-__prog_name__ = "valkyrie"
-__prog_desc__ = "Valkyrie tools cli interface."
+from .commons import common_options
 
 
 # def deactivate_prompts(ctx, param, value):
@@ -29,25 +26,19 @@ __prog_desc__ = "Valkyrie tools cli interface."
 # )
 
 
-@click.command(
-    name=__prog_name__,
-    help=__prog_desc__,
-    context_settings=dict(help_option_names=["-h", "--help"]),
-    hidden=True,
-)
-@click.version_option(
-    __version__,
-    "-V",
-    "--version",
-    message="%(prog)s %(version)s",
-    help="Show version and exit.",
+@common_options(
+    name="valkyrie",
+    description="Valkyrie tools cli interface.",
+    version=__version__,
 )
 @click.pass_context
 def cli(
-    ctx: click.Context,  # noqa: C901
+    ctx: click.Context,  # noqa: B008
+    *args: List[Any],  # noqa: B008
+    **kwargs: Dict[str, Any],  # noqa: B008
 ) -> None:
     """Entry point to the valkyrie-tools suite."""
-    sys_exit("%s functionality not yet implemented", 1)
+    pass
 
 
 if __name__ == "__main__":

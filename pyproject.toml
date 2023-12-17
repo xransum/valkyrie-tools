@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "valkyrie-tools"
-version = "0.2.3"
+version = "1.0.0"
 description = "Valkyrie Tools"
 authors = ["Kevin Haas <xransum@users.noreply.github.com>"]
 license = "MIT"
@@ -38,6 +38,8 @@ beautifulsoup4 = "^4.12.2"
 types-requests = "^2.31.0"
 types-beautifulsoup4 = "^4.12.0"
 art = "^6.1"
+appdirs = "^1.4.4"
+validators = "^0.22.0"
 
 [tool.poetry.dev-dependencies]
 pytest = ">=6.2.5"
@@ -76,6 +78,8 @@ pexpect = "^4.8.0"
 [tool.poetry.scripts]
 valkyrie = "valkyrie_tools.valkyrie:cli"
 urlcheck = "valkyrie_tools.urlcheck:cli"
+ipcheck = "valkyrie_tools.ipcheck:cli"
+whobe = "valkyrie_tools.whobe:cli"
 
 [tool.coverage.paths]
 source = ["src", "*/site-packages"]
@@ -93,6 +97,13 @@ filterwarnings = [
     "ignore::DeprecationWarning:future.*",      # imp: in favour of importlib
     "ignore::DeprecationWarning:ipwhois.net.*", # dns.resolver.Resolver.resolve: migration to
 ]
+
+[tool.black]
+line-length = 80
+
+[tool.isort]
+profile = "black"
+lines_after_imports = 2
 
 [build-system]
 requires = ["poetry-core>=1.0.0"]

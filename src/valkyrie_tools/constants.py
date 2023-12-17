@@ -1,4 +1,5 @@
 """Constants modules."""
+import re
 
 
 __all__ = [
@@ -9,11 +10,23 @@ __all__ = [
     "BINARY_FILE_READ_ERROR",
     "YES_NO_PROMPT",
     "INTERACTIVE_MODE_PROMPT",
+    "EMPTY_ARGS_NOT_ALLOWED",
+    "DEFAULT_CATEGORIZED_HEADERS",
+    "DOMAIN_REGEX_TEXT",
+    "DOMAIN_REGEX",
+    "IPV6_REGEX_TEXT",
+    "IPV6_REGEX",
+    "IPV4_REGEX_TEXT",
+    "IPV4_REGEX",
+    "EMAIL_ADDR_REGEX_TEXT",
+    "EMAIL_ADDR_REGEX",
+    "URL_REGEX_TEXT",
+    "URL_REGEX",
 ]
 
 # Errors
-HELP_SHORT_TEXT = "Try '%s --help' or '%s -h' for more information"
-NO_ARGS_TEXT = "No arg(s) provided"
+HELP_SHORT_TEXT = "Try '{name} -h' or '{name} --help' for more information."
+NO_ARGS_TEXT = "No arguments provided."
 INVALID_ARG_TEXT = "Invalid %s"
 INVALID_FLAG_TEXT = "Invalid flag %s"
 BINARY_FILE_READ_ERROR = "Cannot read binary files"
@@ -21,10 +34,12 @@ BINARY_FILE_READ_ERROR = "Cannot read binary files"
 # Prompts
 YES_NO_PROMPT = "%s [y/N]: "
 INTERACTIVE_MODE_PROMPT = (
-    "Enter/paste your text and Ctrl-D (Cmd-D on Mac or Ctrl-Z on Windows) to save it."
+    "Enter/paste your text and Ctrl-D (Cmd-D on Mac or Ctrl-Z on Windows) to "
+    "save it."
 )
 EMPTY_ARGS_NOT_ALLOWED = "Input args cannot be empty."
 
+# Http default headers
 DEFAULT_CATEGORIZED_HEADERS = {
     "AWS": {
         "Cloudfront": [
@@ -123,3 +138,61 @@ DEFAULT_CATEGORIZED_HEADERS = {
         ]
     },
 }
+DEFAULT_REQUEST_TIMEOUT = 15
+
+# Regex Patterns
+DOMAIN_REGEX_TEXT = (
+    r"(?P<domain>(?:(?P<subdomain>[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?\.)+"
+    r"(?P<root>[a-zA-Z]{2,63})))"
+)
+DOMAIN_REGEX = re.compile(DOMAIN_REGEX_TEXT, re.I | re.M)
+
+IPV6_REGEX_TEXT = (
+    r"(?P<ipv6>"
+    r"(?:[0-9a-fA-F]{1,4}:){7}[0-9a-fA-F]{1,4}"  # Standard IPv6
+    r"|::(?:[0-9a-fA-F]{1,4}:)*[0-9a-fA-F]{1,4}"  # Abbreviated IPv6 with "::"
+    r"|(?:[0-9a-fA-F]{1,4}:)*[0-9a-fA-F]{1,4}::"  # Abbreviated IPv6 with "::"
+    # Abbreviated IPv6 with "::"
+    r"|(?:[0-9a-fA-F]{1,4}:){1,6}::(?:[0-9a-fA-F]{1,4}:)*[0-9a-fA-F]{1,4}"
+    # Abbreviated IPv6 with "::"
+    r"|(?:[0-9a-fA-F]{1,4}:)*[0-9a-fA-F]{1,4}::(?:[0-9a-fA-F]{1,4}:)*"
+    r"[0-9a-fA-F]{1,4}"
+    # Abbreviated IPv6 ending with ":"
+    r"|(?:[0-9a-fA-F]{1,4}:){1,5}:[0-9a-fA-F]{1,4}"
+    r"|:[0-9a-fA-F]{1,4}:"  # IPv6 with a double colon in the middle
+    r")"
+)
+IPV6_REGEX = re.compile(IPV6_REGEX_TEXT, re.I | re.M)
+
+IPV4_REGEX_TEXT = (
+    r"(?P<ipv4>"
+    r"(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)(?:\.(?:25[0-5]|2[0-4][0-9]|"
+    r"[01]?[0-9][0-9]?)){3}"
+    r")"
+)
+IPV4_REGEX = re.compile(IPV4_REGEX_TEXT, re.I | re.M)
+
+EMAIL_ADDR_REGEX_TEXT = (
+    r"(?P<email>(?P<alias>[a-zA-Z0-9._-]+)\+?(?P<user>[a-zA-Z0-9._-]+)@"
+    + DOMAIN_REGEX.pattern
+    + r")"
+)
+EMAIL_ADDR_REGEX = re.compile(EMAIL_ADDR_REGEX_TEXT, re.I | re.M)
+
+URL_REGEX_TEXT = (
+    r"(?P<url>"
+    r"(?P<protocol>[a-zA-Z0-9._-]+):\/\/"  # Protocol
+    # Username and Password
+    r"(?:(?P<username>[^:@]+)(?::(?P<password>[^@]+))?@)?"
+    r"(?:"
+    + DOMAIN_REGEX_TEXT
+    + r"|"
+    + IPV4_REGEX_TEXT
+    + r"|"
+    + IPV6_REGEX_TEXT  # Domain, IPv4, or IPv6
+    + r")"
+    r"(?::(?P<port>\d+))?"  # Port
+    r"(?P<uri>[^?#]*)?"  # URI (anything before the query or fragment)
+    r")"
+)
+URL_REGEX = re.compile(URL_REGEX_TEXT, re.I | re.M)

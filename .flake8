@@ -6,6 +6,6 @@ max-complexity = 10
 docstring-convention = google
 per-file-ignores =
     tests/*:S101,
-    src/valkyrie_tools/__init__.py:F401
+    src/**/*.py:RST213,RST210,
 rst-roles = class,const,func,meth,mod,ref
 rst-directives = deprecated
