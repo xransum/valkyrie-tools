@@ -1,46 +1,45 @@
 """Constants test module."""
+import unittest
+
 from valkyrie_tools.constants import (
-    BINARY_FILE_READ_ERROR,
-    HELP_SHORT_TEXT,
-    INTERACTIVE_MODE_PROMPT,
-    INVALID_ARG_TEXT,
-    INVALID_FLAG_TEXT,
-    NO_ARGS_TEXT,
-    YES_NO_PROMPT,
+    DOMAIN_REGEX,
+    EMAIL_ADDR_REGEX,
+    IPV4_REGEX,
+    IPV6_REGEX,
+    URL_REGEX,
 )
 
 
-def test_help_short_text() -> None:
-    """Tests the HELP_SHORT_TEXT constant."""
-    assert HELP_SHORT_TEXT == "Try '%s --help' or '%s -h' for more information"
+class TestRegex(unittest.TestCase):
+    """Test regex."""
 
+    def setUp(self: unittest.TestCase) -> None:
+        """Set up test fixtures, if any."""
+        pass
 
-def test_no_args_text() -> None:
-    """Tests the NO_ARGS_TEXT constant."""
-    assert NO_ARGS_TEXT == "No arg(s) provided"
+    def test_url_regex(self: unittest.TestCase) -> None:
+        """Test url regex."""
+        self.assertIsNotNone(URL_REGEX.match("https://www.google.com"))
+        self.assertIsNone(URL_REGEX.match("not a url"))
 
+    def test_domain_regex(self: unittest.TestCase) -> None:
+        """Test domain regex."""
+        self.assertIsNotNone(DOMAIN_REGEX.match("google.com"))
+        self.assertIsNone(DOMAIN_REGEX.match("not a domain"))
 
-def test_invalid_arg_text() -> None:
-    """Tests the INVALID_ARG_TEXT constant."""
-    assert INVALID_ARG_TEXT == "Invalid %s"
+    def test_email_addr_regex(self: unittest.TestCase) -> None:
+        """Test email address regex."""
+        self.assertIsNotNone(EMAIL_ADDR_REGEX.match("test@gmail.com"))
+        self.assertIsNone(EMAIL_ADDR_REGEX.match("not an email"))
 
+    def test_ipv4_addr_regex(self: unittest.TestCase) -> None:
+        """Test ipv4 address regex."""
+        self.assertIsNotNone(IPV4_REGEX.match("192.168.1.1"))
+        self.assertIsNone(IPV4_REGEX.match("not an ip address"))
 
-def test_invalid_flag_text() -> None:
-    """Tests the INVALID_FLAG_TEXT constant."""
-    assert INVALID_FLAG_TEXT == "Invalid flag %s"
-
-
-def test_binary_file_read_error() -> None:
-    """Tests the BINARY_FILE_READ_ERROR constant."""
-    assert BINARY_FILE_READ_ERROR == "Cannot read binary files"
-
-
-def test_yes_no_prompt() -> None:
-    """Tests the YES_NO_PROMPT constant."""
-    assert YES_NO_PROMPT == "%s [y/N]: "
-
-
-def test_interactive_mode_prompt() -> None:
-    """Tests the INTERACTIVE_MODE_PROMPT constant."""
-    assert "Enter/paste your text" in INTERACTIVE_MODE_PROMPT
-    assert "Ctrl-D" in INTERACTIVE_MODE_PROMPT
+    def test_ipv6_addr_regex(self: unittest.TestCase) -> None:
+        """Test ipv6 address regex."""
+        self.assertIsNotNone(
+            IPV6_REGEX.match("2001:0db8:85a3:0000:0000:8a2e:0370:7334")
+        )
+        self.assertIsNone(IPV6_REGEX.match("not an ip address"))
