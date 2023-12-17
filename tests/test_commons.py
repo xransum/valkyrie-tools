@@ -30,7 +30,9 @@ class TestCLI(unittest.TestCase):
     def test_common_options(self) -> None:
         """Test common_options decorator."""
 
-        @common_options(name="test", description="Test command", version="1.0.0")
+        @common_options(
+            name="test", description="Test command", version="1.0.0"
+        )
         def test_command(values, *_, **__):  # noqa: F811
             """A test command."""
             print(" ".join(values))
@@ -351,7 +353,9 @@ class TestRegexExtraction(unittest.TestCase):
     def test_extract_emails(self: unittest.TestCase) -> None:
         """Test extract_emails."""
         expected_result = ["test@domain.com"]
-        self.assertEqual(extract_emails(self.text, unique=True), expected_result)
+        self.assertEqual(
+            extract_emails(self.text, unique=True), expected_result
+        )
 
     def test_extract_urls(self: unittest.TestCase) -> None:
         """Test extract_urls."""
