@@ -1,26 +1,25 @@
-# Valkyrie Tools
+<div align="center">
+   
+  # Valkyrie Tools
 
-<p align="center">
-    <img src="https://raw.githubusercontent.com/xransum/valkyrie-tools/main/docs/images/logo.png" width="20%" style="border-radius: 10%">
-</p>
+  A collection of tools and scripts for making the life of security analysts
+  easier, faster, and more efficient.
 
-[![Tests](https://github.com/xransum/valkyrie-tools/workflows/Tests/badge.svg)][tests]
-[![Codecov](https://codecov.io/gh/xransum/valkyrie-tools/branch/main/graph/badge.svg)][codecov]
+  <img src="https://raw.githubusercontent.com/xransum/valkyrie-tools/main/docs/images/logo.png" width="20%" style="border-radius: 10%">
 
-[![PyPI](https://img.shields.io/pypi/v/valkyrie-tools.svg)][pypi_]
-[![Python Version](https://img.shields.io/pypi/pyversions/valkyrie-tools)][python version]
+  <br />
 
-[![Python Black](https://img.shields.io/badge/code%20style-black-000000.svg?label=Style)](https://github.com/xransum/valkyrie-tools)
-[![Read the documentation at https://valkyrie-tools.readthedocs.io/](https://img.shields.io/readthedocs/valkyrie-tools/latest.svg?label=Read%20the%20Docs)][read the docs]
+  [![Tests](https://github.com/xransum/valkyrie-tools/workflows/Tests/badge.svg)][tests]
+  [![Codecov](https://codecov.io/gh/xransum/valkyrie-tools/branch/main/graph/badge.svg)][codecov]
+  [![PyPI](https://img.shields.io/pypi/v/valkyrie-tools.svg)][pypi_]
+  [![Python Version](https://img.shields.io/pypi/pyversions/valkyrie-tools)][python version]
 
-[![Downloads](https://pepy.tech/badge/valkyrie-tools)](https://pepy.tech/project/valkyrie-tools)
-[![License](https://img.shields.io/pypi/l/valkyrie-tools)][license]
+  [![Python Black](https://img.shields.io/badge/code%20style-black-000000.svg?label=Style)](https://github.com/xransum/valkyrie-tools)
+  [![Read the documentation at https://valkyrie-tools.readthedocs.io/](https://img.shields.io/readthedocs/valkyrie-tools/latest.svg?label=Read%20the%20Docs)][read the docs]
+  [![Downloads](https://pepy.tech/badge/valkyrie-tools)](https://pepy.tech/project/valkyrie-tools)
+  [![License](https://img.shields.io/pypi/l/valkyrie-tools)][license]
 
-[pypi_]: https://pypi.org/project/valkyrie-tools/
-[python version]: https://pypi.org/project/valkyrie-tools
-[read the docs]: https://valkyrie-tools.readthedocs.io/
-[tests]: https://github.com/xransum/valkyrie-tools/actions?workflow=Tests
-[codecov]: https://app.codecov.io/gh/xransum/valkyrie-tools
+</div>
 
 ## Installation
 
@@ -57,80 +56,29 @@ options.
 $ valkyrie --help
 ```
 
-### Commands
+### Command Line Scripts
 
-- `valkyrie`: The main entrypoint for configuring the tools.
-- `urlcheck`: Check the aliveness of a URL.
-- `ipcheck`: Get information for an IP address. (_WIP_)
-- `dnscheck`: Get dns records for a domain/IP address. (_WIP_)
-- `whobe`: Get information for a domain/IP address. (_WIP_)
+A list of all available command line scripts:
+- **[valkyrie](#valkyrie)**
+- **[urlcheck](#urlcheck)**
+- **[ipcheck](#ipcheck)**
+- **[whobe](#whobe)**
 
-### CLI
 
-You can call valkyrie-tools from the command line like so:
-
-```bash
-$ valkyrie
-```
-
-#### Passing Input
-
-All supported methods of passing input to the script are:
-
-**Text as argument:**
+Once you've installed the package, you can run any of the scripts like so:
 
 ```bash
-$ myscript "abc"
+$ <script-name> <args>
 ```
 
-**Text from file:**
+#### Valkyrie
 
-```bash
-$ myscript test.txt
-```
+This script has not yet been implemented.
 
-**Interactive mode:**
 
-```bash
-$ myscript -I
-$ myscript --interactive
-```
+#### URLCheck
 
-**Piped stdin input:**
-
-```bash
-$ echo "abc" | myscript
-```
-
-**Piped stdin input (alt):**
-
-```bash
-$ myscript <<<"abc"
-```
-
-**Input file:**
-
-```bash
-$ myscript <myfile.txt
-```
-
-**Process substitution by file descriptor:**
-
-```bash
-$ myscript <(cat myfile.txt)
-```
-
-### Import
-
-You can import valkyrie-tools into your project and use it like so:
-
-```python
-import valkyrie_tools
-```
-
-### Scripts
-
-#### urlcheck
+This script will check the aliveness of a URL and follow any redirects.
 
 Arguments:
 
@@ -147,6 +95,81 @@ $ urlcheck "https://google.com"
 >> https://www.google.com/
    HTTP/1.1 - 200 - OK
 ```
+
+#### IPCheck
+
+This script will get information for an IP address.
+
+Arguments:
+
+```bash
+$ ipcheck <ip>
+```
+
+Example Usage:
+
+```bash
+$ ipcheck 1.1.1.1    
+> 1.1.1.1
+  ip       : 1.1.1.1
+  hostname : one.one.one.one
+  anycast  : True
+  city     : Los Angeles
+  region   : California
+  country  : US
+  loc      : 34.0522,-118.2437
+  org      : AS13335 Cloudflare, Inc.
+  postal   : 90076
+  timezone : America/Los_Angeles
+  readme   : https://ipinfo.io/missingauth
+```
+
+#### WhoBe
+
+This script will get information for a domain or IP address.
+
+Arguments:
+
+```bash
+$ whobe <domain/ip>
+```
+
+Example Usage:
+
+```bash
+$ whobe google.com
+> google.com
+   Registrar: MarkMonitor Inc. (None)
+   Emails: 
+      - abusecomplaints@markmonitor.com
+   Name: None
+   Address: None, None, None None, None
+   Creation Date: 1997-09-15 04:00:00
+   Expiration Date: 2028-09-14 04:00:00
+   Updated Date: 2019-09-09 15:39:04
+   Name Servers: 
+      - NS1.GOOGLE.COM
+      - NS2.GOOGLE.COM
+      - NS3.GOOGLE.COM
+      - NS4.GOOGLE.COM
+$ 
+$ whobe 1.1.1.1    
+> 1.1.1.1
+   ASN: 13335 (AU)
+   CIDR: 1.1.1.0/24
+   Description: 1.1.1.0/24
+   Networks:
+      - APNIC-LABS (AA1412-AP)
+        CIDR: 1.1.1.0/24
+        Netrange: (1.1.1.0 - 1.1.1.255) - 24 Hosts
+        Address: PO Box 3646 South Brisbane, QLD 4101 Australia, AU
+        Emails: 
+          - resolver-abuse@cloudflare.com
+          - helpdesk@apnic.net
+          - research@apnic.net
+```
+
+
 
 ## Contributing
 
