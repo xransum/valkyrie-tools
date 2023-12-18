@@ -89,7 +89,13 @@ def print_whois(whois: Optional[Dict[str, Any]]) -> None:  # pragma: no cover
             f'({whois.get("org", "Unknown")})'
         )
 
-        click.echo(f'   Status: {whois.get("status", "Unknown").split(" ")[0]}')
+        # status = whois.get("status", "Unknown")
+        # if isinstance(status, (list, tuple)):
+        #     status = ", ".join(
+        #         list(set([text.split(" ")[0] for text in status]))
+        #     )
+        #
+        # click.echo(f"   Status: {status}")
 
         click.echo("   Emails: ")
         emails = whois.get("emails", ["None"])

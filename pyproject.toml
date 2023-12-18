@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "valkyrie-tools"
-version = "1.0.1"
+version = "1.0.2"
 description = "Valkyrie Tools"
 authors = ["Kevin Haas <xransum@users.noreply.github.com>"]
 license = "MIT"
