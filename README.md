@@ -1,23 +1,23 @@
 <div align="center">
-   
-  # Valkyrie Tools
 
-  A collection of tools and scripts for making the life of security analysts
-  easier, faster, and more efficient.
+# Valkyrie Tools
+
+A collection of tools and scripts for making the life of security analysts
+easier, faster, and more efficient.
 
   <img src="https://raw.githubusercontent.com/xransum/valkyrie-tools/main/docs/images/logo.png" width="20%" style="border-radius: 10%">
 
   <br />
 
-  [![Tests](https://github.com/xransum/valkyrie-tools/workflows/Tests/badge.svg)][tests]
-  [![Codecov](https://codecov.io/gh/xransum/valkyrie-tools/branch/main/graph/badge.svg)][codecov]
-  [![PyPI](https://img.shields.io/pypi/v/valkyrie-tools.svg)][pypi_]
-  [![Python Version](https://img.shields.io/pypi/pyversions/valkyrie-tools)][python version]
+[![Tests](https://github.com/xransum/valkyrie-tools/workflows/Tests/badge.svg)][tests]
+[![Codecov](https://codecov.io/gh/xransum/valkyrie-tools/branch/main/graph/badge.svg)][codecov]
+[![PyPI](https://img.shields.io/pypi/v/valkyrie-tools.svg)][pypi_]
+[![Python Version](https://img.shields.io/pypi/pyversions/valkyrie-tools)][python version]
 
-  [![Python Black](https://img.shields.io/badge/code%20style-black-000000.svg?label=Style)](https://github.com/xransum/valkyrie-tools)
-  [![Read the documentation at https://valkyrie-tools.readthedocs.io/](https://img.shields.io/readthedocs/valkyrie-tools/latest.svg?label=Read%20the%20Docs)][read the docs]
-  [![Downloads](https://pepy.tech/badge/valkyrie-tools)](https://pepy.tech/project/valkyrie-tools)
-  [![License](https://img.shields.io/pypi/l/valkyrie-tools)][license]
+[![Python Black](https://img.shields.io/badge/code%20style-black-000000.svg?label=Style)](https://github.com/xransum/valkyrie-tools)
+[![Read the documentation at https://valkyrie-tools.readthedocs.io/](https://img.shields.io/readthedocs/valkyrie-tools/latest.svg?label=Read%20the%20Docs)][read the docs]
+[![Downloads](https://pepy.tech/badge/valkyrie-tools)](https://pepy.tech/project/valkyrie-tools)
+[![License](https://img.shields.io/pypi/l/valkyrie-tools)][license]
 
 </div>
 
@@ -59,11 +59,11 @@ $ valkyrie --help
 ### Command Line Scripts
 
 A list of all available command line scripts:
+
 - **[valkyrie](#valkyrie)**
 - **[urlcheck](#urlcheck)**
 - **[ipcheck](#ipcheck)**
 - **[whobe](#whobe)**
-
 
 Once you've installed the package, you can run any of the scripts like so:
 
@@ -74,7 +74,6 @@ $ <script-name> <args>
 #### Valkyrie
 
 This script has not yet been implemented.
-
 
 #### URLCheck
 
@@ -109,7 +108,7 @@ $ ipcheck <ip>
 Example Usage:
 
 ```bash
-$ ipcheck 1.1.1.1    
+$ ipcheck 1.1.1.1
 > 1.1.1.1
   ip       : 1.1.1.1
   hostname : one.one.one.one
@@ -140,20 +139,20 @@ Example Usage:
 $ whobe google.com
 > google.com
    Registrar: MarkMonitor Inc. (None)
-   Emails: 
+   Emails:
       - abusecomplaints@markmonitor.com
    Name: None
    Address: None, None, None None, None
    Creation Date: 1997-09-15 04:00:00
    Expiration Date: 2028-09-14 04:00:00
    Updated Date: 2019-09-09 15:39:04
-   Name Servers: 
+   Name Servers:
       - NS1.GOOGLE.COM
       - NS2.GOOGLE.COM
       - NS3.GOOGLE.COM
       - NS4.GOOGLE.COM
-$ 
-$ whobe 1.1.1.1    
+$
+$ whobe 1.1.1.1
 > 1.1.1.1
    ASN: 13335 (AU)
    CIDR: 1.1.1.0/24
@@ -163,13 +162,11 @@ $ whobe 1.1.1.1
         CIDR: 1.1.1.0/24
         Netrange: (1.1.1.0 - 1.1.1.255) - 24 Hosts
         Address: PO Box 3646 South Brisbane, QLD 4101 Australia, AU
-        Emails: 
+        Emails:
           - resolver-abuse@cloudflare.com
           - helpdesk@apnic.net
           - research@apnic.net
 ```
-
-
 
 ## Contributing
 
