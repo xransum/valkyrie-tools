@@ -190,6 +190,11 @@ of the the bad actors it was built to fight.
 
 <!-- github-only -->
 
+[pypi_]: https://pypi.org/project/valkyrie-tools/
+[python version]: https://pypi.org/project/valkyrie-tools
+[read the docs]: https://valkyrie-tools.readthedocs.io/
+[tests]: https://github.com/xransum/valkyrie-tools/actions?workflow=Tests
+[codecov]: https://app.codecov.io/gh/xransum/valkyrie-tools
 [@xransum]: https://github.com/xransum
 [nox]: https://nox.thea.codes/
 [poetry]: https://python-poetry.org/
