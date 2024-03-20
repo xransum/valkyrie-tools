@@ -13,6 +13,7 @@ PRIVATE_IP_SKIP_MESSAGE = "Skipped, private ip address."
 
 
 @common_options(
+    cmd_type=click.command,
     name="ipcheck",
     description="Get ip address info.",
     version="0.1.0",

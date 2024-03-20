@@ -31,6 +31,7 @@ class TestCLI(unittest.TestCase):
         """Test common_options decorator."""
 
         @common_options(
+            cmd_type=click.command,
             name="test", description="Test command", version="1.0.0"
         )
         def test_command(values, *_, **__):  # noqa: F811

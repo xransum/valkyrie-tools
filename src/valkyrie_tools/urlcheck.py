@@ -29,6 +29,7 @@ OUTPUT_FILE = None
 
 
 @common_options(
+    cmd_type=click.command,
     name="urlcheck",
     description="Check url(s) for their aliveness and status.",
     version="0.1.0",
