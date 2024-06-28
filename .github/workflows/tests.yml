@@ -57,12 +57,10 @@ jobs:
 
           with open(os.environ["GITHUB_ENV"], mode="a") as io:
               print(f"VIRTUALENV_PIP={pip.__version__}", file=io)
-      - name: List files
-        run: |
-          ls -la .github/workflows
+
       - name: Install Poetry
         run: |
-          pipx install --pip-args=--constraint=.github/workflows/constraints.txt poetry
+          pipx install --pip-args=--constraint="${{ github.workspace }}/.github/workflows/constraints.txt" poetry
           poetry --version
 
       - name: Install Nox
