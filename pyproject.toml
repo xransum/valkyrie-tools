@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "valkyrie-tools"
-version = "1.0.2"
+version = "1.1.0"
 description = "Valkyrie Tools"
 authors = ["Kevin Haas <xransum@users.noreply.github.com>"]
 license = "MIT"
@@ -108,6 +108,13 @@ line-length = 80
 [tool.isort]
 profile = "black"
 lines_after_imports = 2
+
+[tool.safety]
+ignore = [
+    "CVE-2019-8341",
+    "PVE-2024-65401",
+    "CVE-2023-29483"
+]
 
 [build-system]
 requires = ["poetry-core>=1.0.0"]

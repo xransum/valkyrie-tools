@@ -1,4 +1,5 @@
 """Command-line script for checking url aliveness and status."""
+
 import re
 import sys
 from typing import Tuple

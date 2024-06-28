@@ -1,4 +1,5 @@
 """Unittests for the whobe cli command."""
+
 import unittest
 from unittest.mock import patch
 

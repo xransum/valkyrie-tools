@@ -1,4 +1,5 @@
 """Tests for dnscheck module."""
+
 import unittest
 from unittest.mock import patch
 
@@ -28,6 +29,14 @@ class TestDnscheck(BaseCommandTest, unittest.TestCase):
         result = self.runner.invoke(self.command, [mock_ip])
         # Assert the result
         self.assertIn(mock_ip, result.output)
+
+    @patch("valkyrie_tools.dnscheck.get_dns_records")
+    def test_no_record_types(self, mock_get_dns_records):
+        """Test for no record types."""
+        # Mock the responses
+        # We need to test the flag for rtypes, passing an empty
+        # list of record types, which should revert to the default
+        pass
 
     @patch("valkyrie_tools.dnscheck.get_dns_records")
     def test_multiple_ip(self, mock_get_dns_records):

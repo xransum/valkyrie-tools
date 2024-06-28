@@ -1,4 +1,5 @@
 """Package commons for valkyrie-tools."""
+
 import os
 import re
 import sys
@@ -93,13 +94,13 @@ def common_options(
             help="Interactive mode.",
             default=False,
         )
-        @click.version_option(
-            version,
-            "-V",
-            "--version",
-            message="%(prog)s %(version)s",
-            help="Show version and exit.",
-        )
+        # @click.version_option(
+        #    version,
+        #    "-V",
+        #    "--version",
+        #    message="%(prog)s %(version)s",
+        #    help="Show version and exit.",
+        # )
         @click.argument(
             "values", nargs=-1, type=click.UNPROCESSED, required=False
         )

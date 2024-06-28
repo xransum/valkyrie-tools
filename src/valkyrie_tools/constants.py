@@ -1,4 +1,5 @@
 """Constants modules."""
+
 import re
 
 
@@ -26,6 +27,7 @@ __all__ = [
 
 # Errors
 HELP_SHORT_TEXT = "Try '{name} -h' or '{name} --help' for more information."
+HELP_VERSION_TEXT = "Show the version and exit."
 NO_ARGS_TEXT = "No arguments provided."
 INVALID_ARG_TEXT = "Invalid %s"
 INVALID_FLAG_TEXT = "Invalid flag %s"

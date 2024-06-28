@@ -1,8 +1,10 @@
 """Config module."""
-import os
+
 import configparser
+import os
+from typing import Any, Dict
+
 from appdirs import user_config_dir
-from typing import Dict, Any
 
 
 class Config:
@@ -11,7 +13,8 @@ class Config:
     Attributes:
         config_name (str): The name of the configuration file.
         config_file (str): The full path to the configuration file.
-        config (configparser.ConfigParser): The configparser for the configuration file.
+        config (configparser.ConfigParser): The configparser for the
+            configuration file.
     """
 
     def __init__(
@@ -23,7 +26,8 @@ class Config:
 
         Args:
             config_name (str): The name of the configuration file.
-            defaults (dict, optional): The configuration default values. Defaults to None.
+            defaults (dict, optional): The configuration default values.
+                Defaults to None.
         """
         self.config_name = config_name
         self.config_file = os.path.join(user_config_dir(), f".{config_name}")
@@ -48,7 +52,8 @@ class Config:
         Args:
             section (str): The section of the option.
             option (str): The name of the option.
-            fallback (Any, optional): The fallback value if the option is not found. Defaults to None.
+            fallback (Any): The fallback value if the option is not found.
+                Defaults to None.
 
         Returns:
             Any: The value of the option.
@@ -96,15 +101,3 @@ class Config:
                     self.config.add_section(section)
                 self.config.set(section, option, str(value))
         self.save()
-
-    def load_defaults_from_env(self):
-        """Load default values from environment variables."""
-        if self.defaults is None:
-            return
-
-        for section, options in self.defaults.items():
-            for option, value in options.items():
-                env_var_name = f"{section.upper()}_{option.upper()}"
-                env_value = os.environ.get(env_var_name)
-                if env_value is not None:
-                    self.set(section, option, env_value)

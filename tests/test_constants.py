@@ -1,4 +1,5 @@
 """Constants test module."""
+
 import unittest
 
 from valkyrie_tools.constants import (

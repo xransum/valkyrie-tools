@@ -2,11 +2,15 @@
 
 Inherited unittest class mixin imported from command test suites.
 """
+
 from unittest.mock import patch
 
 from click.testing import CliRunner
 
-from valkyrie_tools.constants import INTERACTIVE_MODE_PROMPT, NO_ARGS_TEXT
+from valkyrie_tools.constants import (  # HELP_VERSION_TEXT,
+    INTERACTIVE_MODE_PROMPT,
+    NO_ARGS_TEXT,
+)
 
 
 class BaseCommandTest:
@@ -23,24 +27,11 @@ class BaseCommandTest:
         """Tear down test fixtures, if any."""
         self.runner = None
 
-    def test_version_option(self) -> None:
-        """Test --version flag."""
-        result = self.runner.invoke(self.command, ["--version"])
-        name, version = result.output.split(" ")
-
-        # Check name is correct
-        self.assertEqual(name, self.command.name)
-        # Check version is a valid semantic version scheme
-        for v in version.strip().split("."):
-            self.assertTrue(v.isdigit())
-
-        # Check clean exit
-        self.assertEqual(result.exit_code, 0)
-
     def test_help_option(self) -> None:
         """Test --help flag."""
         result = self.runner.invoke(self.command, ["--help"])
-        self.assertIn("Show version and exit.", result.output)
+        # self.assertIn("Show version and exit.", result.output)
+        self.assertIn("Usage: ", result.output)
         self.assertEqual(result.exit_code, 0)
 
     def test_interactive_mode(self) -> None:

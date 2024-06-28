@@ -1,4 +1,5 @@
 """Test suite for the valkyrie_tools.whois module."""
+
 import unittest
 from unittest.mock import patch
 

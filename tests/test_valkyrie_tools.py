@@ -1,4 +1,5 @@
 """Test cases for the valkyrie_tools module."""
+
 from valkyrie_tools import __version__
 
 

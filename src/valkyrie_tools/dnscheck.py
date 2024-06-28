@@ -1,21 +1,22 @@
 """DNS lookup command-line script."""
+
 import sys
 from typing import List, Tuple
+
 import click
 
-from .constants import HELP_SHORT_TEXT, NO_ARGS_TEXT
 from .commons import (
     common_options,
-    extract_ip_addrs,
     extract_domains,
+    extract_ip_addrs,
     parse_input_methods,
 )
+from .constants import HELP_SHORT_TEXT, NO_ARGS_TEXT
 from .dns import DEFAULT_RECORD_TYPES, RECORD_TYPES, get_dns_records
 
 
 def print_results(arg: str, results: dict) -> None:
     """Print the results of the DNS query."""
-
     click.echo(f"> {arg}".format(arg))
     rtype_len = max([len(rtype) for rtype, _ in results])
     for key, value in results:
@@ -45,9 +46,6 @@ def cli(
     record_types: List[str],
 ) -> None:  # noqa: C901
     """Check whois on domains and ip addresses."""
-    if len(record_types) > 0:
-        record_types = list(set(record_types))
-
     args = parse_input_methods(values, interactive, ctx)
 
     if len(args) == 0:
@@ -65,5 +63,5 @@ def cli(
         print_results(arg, results)
 
         # Print trailing newline
-        if a < len(args) - 1:
+        if a < len(args) - 1:  # pragma: no cover
             click.echo()

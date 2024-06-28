@@ -1,12 +1,12 @@
 """Urlcheck test module."""
+
 import unittest
 from typing import List, Optional, Tuple, Union
 from unittest.mock import MagicMock, Mock, patch
 
 import requests
-from click.testing import CliRunner
 
-from valkyrie_tools.constants import INTERACTIVE_MODE_PROMPT, NO_ARGS_TEXT
+from valkyrie_tools.constants import INTERACTIVE_MODE_PROMPT
 from valkyrie_tools.exceptions import (
     REQUESTS_CONNECTION_ERROR_MESSAGES,
     REQUESTS_SSL_ERROR_MESSAGE,
@@ -15,6 +15,8 @@ from valkyrie_tools.exceptions import (
     REQUESTS_UNHANDLED_CONNECTION_ERROR_MESSAGE,
 )
 from valkyrie_tools.urlcheck import HEADER_KEY_TRUNC_LENGTH, cli
+
+from .test_base_command import BaseCommandTest
 
 
 META_HTML = (
@@ -34,8 +36,10 @@ MOCK_REDIRECT_CHAIN = [
 ]
 
 
-class TestURLCheckCLI(unittest.TestCase):
+class TestURLCheckCLI(BaseCommandTest, unittest.TestCase):
     """Test suite for the valkyrie_tools.urlcheck command."""
+
+    command = cli
 
     # @pytest.fixture(autouse=True)
     # def setup(self) -> None:
@@ -122,39 +126,13 @@ class TestURLCheckCLI(unittest.TestCase):
 
         return mock_responses
 
-    def setUp(self) -> None:
+    def setUp(self):
         """Set up test fixtures, if any."""
-        self.runner = CliRunner()
+        super().setUp()
 
-    def tearDown(self) -> CliRunner:
+    def tearDown(self):
         """Tear down test fixtures, if any."""
-        self.runner = None
-
-    def test_version_option(self) -> None:
-        """Test --version option."""
-        result = self.runner.invoke(cli, ["--version"])
-        name, version = result.output.split(" ")
-
-        # Check name is correct
-        self.assertEqual(name, "urlcheck")
-        # Check version is a valid semantic version scheme
-        for v in version.strip().split("."):
-            self.assertTrue(v.isdigit())
-
-        # Check clean exit
-        self.assertEqual(result.exit_code, 0)
-
-    def test_help_option(self) -> None:
-        """Test --help option."""
-        result = self.runner.invoke(cli, ["--help"])
-        self.assertIn("Show version and exit.", result.output)
-        self.assertEqual(result.exit_code, 0)
-
-    def test_empty_args(self) -> None:
-        """It exits with a status code of 1."""
-        result = self.runner.invoke(cli, [])
-        self.assertIn(NO_ARGS_TEXT, result.output)
-        self.assertEqual(result.exit_code, 1)
+        super().tearDown()
 
     @patch("valkyrie_tools.httpr.make_request")
     def test_show_headers_option(self, mock_make_request: MagicMock) -> None:
@@ -162,7 +140,7 @@ class TestURLCheckCLI(unittest.TestCase):
         mock_chain_link = self._create_mock_responses(URL_MOCKS[0])
         url, mock_response = mock_chain_link
         mock_make_request.return_value = mock_chain_link
-        result = self.runner.invoke(cli, [url, "--show-headers"])
+        result = self.runner.invoke(self.command, [url, "--show-headers"])
 
         self.assertEqual(result.exit_code, 0)
         self.assertIn("...", result.output)
@@ -176,7 +154,7 @@ class TestURLCheckCLI(unittest.TestCase):
         url, mock_response = mock_chain_link
         mock_make_request.return_value = mock_chain_link
         result = self.runner.invoke(
-            cli, [url, "--show-headers", "--no-truncate"]
+            self.command, [url, "--show-headers", "--no-truncate"]
         )
 
         self.assertNotIn("...", result.output)
@@ -199,7 +177,7 @@ class TestURLCheckCLI(unittest.TestCase):
                 "",  # Simulates CTRL+d
             ]
 
-            result = self.runner.invoke(cli, ["--interactive"])
+            result = self.runner.invoke(self.command, ["--interactive"])
 
         self.assertIn(INTERACTIVE_MODE_PROMPT, result.output)
         self.assertIn(url, result.output)
@@ -214,7 +192,7 @@ class TestURLCheckCLI(unittest.TestCase):
 
     #     with self.runner.isolated_filesystem():
     #         output_file = "output.txt"
-    #         result = self.runner.invoke(cli, [url, "-o", output_file])
+    #         result = self.runner.invoke(self.command, [url, "-o", output_file])
 
     #         self.assertTrue(os.path.exists(output_file))
     #         self.assertEqual(result.exit_code, 0)
@@ -225,7 +203,7 @@ class TestURLCheckCLI(unittest.TestCase):
         mock_chain_link = self._create_mock_responses(URL_MOCKS[0])
         url, mock_response = mock_chain_link
         mock_make_request.return_value = mock_chain_link
-        result = self.runner.invoke(cli, url)
+        result = self.runner.invoke(self.command, url)
 
         self.assertIn(url, result.output)
         self.assertEqual(result.exit_code, 0)
@@ -236,7 +214,7 @@ class TestURLCheckCLI(unittest.TestCase):
         mock_chain_link = self._create_mock_responses(URL_MOCKS[0])
         url, mock_response = mock_chain_link
         mock_make_request.return_value = mock_chain_link
-        result = self.runner.invoke(cli, input=url)
+        result = self.runner.invoke(self.command, input=url)
 
         self.assertIn(url, result.output)
         self.assertEqual(result.exit_code, 0)
@@ -247,7 +225,7 @@ class TestURLCheckCLI(unittest.TestCase):
         mock_chain_link = self._create_mock_responses(URL_MOCKS[0])
         url, mock_response = mock_chain_link
         mock_make_request.return_value = mock_chain_link
-        result = self.runner.invoke(cli, f"{url} {url}")
+        result = self.runner.invoke(self.command, f"{url} {url}")
 
         # Split lines and check only one url is in the output
         self.assertEqual(
@@ -263,7 +241,7 @@ class TestURLCheckCLI(unittest.TestCase):
         mock_chain_a, mock_chain_b = mock_chain
         mock_make_request.side_effect = mock_chain
         urls = [mock_chain_a[0], mock_chain_b[0]]
-        result = self.runner.invoke(cli, " ".join(urls))
+        result = self.runner.invoke(self.command, " ".join(urls))
 
         self.assertEqual([True, True], [url in result.output for url in urls])
         self.assertEqual(result.exit_code, 0)
@@ -278,7 +256,7 @@ class TestURLCheckCLI(unittest.TestCase):
         )
         mock_chain_link = mock_chain[0]
         mock_make_request.side_effect = mock_chain
-        result = self.runner.invoke(cli, mock_chain_link[0])
+        result = self.runner.invoke(self.command, mock_chain_link[0])
 
         for url, _, _, _ in MOCK_REDIRECT_CHAIN:
             self.assertIn(url, result.output)
@@ -291,7 +269,7 @@ class TestURLCheckCLI(unittest.TestCase):
         url, *_ = URL_MOCKS[0]
         error = requests.exceptions.SSLError(REQUESTS_SSL_ERROR_MESSAGE)
         mock_make_request.return_value = [url, error]
-        result = self.runner.invoke(cli, url)
+        result = self.runner.invoke(self.command, url)
         self.assertIn(REQUESTS_SSL_ERROR_MESSAGE, result.output)
 
     @patch("valkyrie_tools.httpr.make_request")
@@ -303,7 +281,7 @@ class TestURLCheckCLI(unittest.TestCase):
         for key, value in REQUESTS_CONNECTION_ERROR_MESSAGES.items():
             error = requests.exceptions.ConnectionError(key)
             mock_make_request.return_value = [url, error]
-            result = self.runner.invoke(cli, url)
+            result = self.runner.invoke(self.command, url)
             self.assertIn(value, result.output)
 
     @patch("valkyrie_tools.httpr.make_request")
@@ -316,7 +294,7 @@ class TestURLCheckCLI(unittest.TestCase):
             "Unknown connection exception"
         )
         mock_make_request.return_value = [url, error]
-        result = self.runner.invoke(cli, url)
+        result = self.runner.invoke(self.command, url)
         print(result.output)
         self.assertIn(
             REQUESTS_UNHANDLED_CONNECTION_ERROR_MESSAGE, result.output
@@ -331,7 +309,7 @@ class TestURLCheckCLI(unittest.TestCase):
         msg = "Value exception."
         error = ValueError(msg)
         mock_make_request.return_value = [url, error]
-        result = self.runner.invoke(cli, url)
+        result = self.runner.invoke(self.command, url)
         print(result.output)
         self.assertIn(msg, result.output)
 
@@ -343,7 +321,7 @@ class TestURLCheckCLI(unittest.TestCase):
         url, *_ = URL_MOCKS[0]
         error = requests.exceptions.Timeout("Timeout exception thrown")
         mock_make_request.return_value = [url, error]
-        result = self.runner.invoke(cli, url)
+        result = self.runner.invoke(self.command, url)
         print(result.output)
         self.assertIn(REQUESTS_TIMEOUT_ERROR_MESSAGE, result.output)
 
@@ -357,7 +335,7 @@ class TestURLCheckCLI(unittest.TestCase):
             "Too many redirects thrown"
         )
         mock_make_request.return_value = [url, error]
-        result = self.runner.invoke(cli, url)
+        result = self.runner.invoke(self.command, url)
         print(result.output)
         self.assertIn(REQUESTS_TOO_MANY_REDIRECTS_ERROR_MESSAGE, result.output)
 
@@ -371,5 +349,5 @@ class TestURLCheckCLI(unittest.TestCase):
                 (url, 11, code, "Status code %s" % code)
             )
             mock_make_request.return_value = mock_chain_link
-            result = self.runner.invoke(cli, url)
+            result = self.runner.invoke(self.command, url)
             self.assertIn(" - %i - " % code, result.output)

@@ -1,13 +1,16 @@
 """Module for DNS lookups."""
+
 import re
+from typing import List, Tuple
+
 import dns.inet
 import dns.name
-import dns.resolver
 import dns.query
-import dns.update
+import dns.rdatatype
+import dns.resolver
 import dns.tsig
 import dns.tsigkeyring
-import dns.rdatatype
+import dns.update
 
 from .ipaddr import is_valid_ip_addr
 
@@ -49,7 +52,7 @@ def is_valid_record_type(record_type: str) -> bool:
     try:
         return dns.rdatatype.from_text(record_type) is not None
 
-    except dns.rdatatype.UnknownRdatatype:
+    except (dns.rdatatype.UnknownRdatatype, AttributeError):
         return False
 
 
@@ -61,6 +64,9 @@ def get_rdns_record(ipaddr: str) -> list:
 
     Returns:
         list: List of reverse DNS records.
+
+    Raises:
+        ValueError: If the IP address is invalid.
     """
     if is_valid_ip_addr(ipaddr) is False:
         raise ValueError(f"Invalid IP address: {ipaddr}")
@@ -83,18 +89,22 @@ def get_rdns_record(ipaddr: str) -> list:
 
 
 def get_dns_record(
-    domain: str, record_type: str, nameservers: list = DEFAULT_NAMESERVERS
-) -> list:
+    domain: str,
+    record_type: str,
+    nameservers: List[str] = DEFAULT_NAMESERVERS,
+) -> List[Tuple[str, str]]:
     """Get DNS record for a domain.
 
     Args:
         domain (str): Domain to get DNS record for.
         record_type (str): Record type to get.
-        nameservers (list, optional): List of nameservers to query.
-            Defaults to DEFAULT_NAMESERVERS.
+        nameservers (list[str], optional): List of name servers to use.
+
+    Raises:
+        ValueError: If the record type is invalid.
 
     Returns:
-        list: List of DNS records.
+        list[Tuple[str, str]]: List of DNS records.
     """
     record_type = record_type.upper()
     if is_valid_record_type(record_type) is False:
@@ -107,10 +117,7 @@ def get_dns_record(
 
     resolves = []
 
-    if (
-        record_type == "PTR"
-        and is_valid_ip_addr(domain) is True
-    ):
+    if record_type == "PTR" and is_valid_ip_addr(domain) is True:
         resolves.extend(get_rdns_record(domain))
     else:
         try:
@@ -137,17 +144,17 @@ def get_dns_record(
 
 
 def get_dns_records(
-    domain: str, record_types: list = DEFAULT_RECORD_TYPES
-) -> list:
+    domain: str, record_types: List[str] = DEFAULT_RECORD_TYPES
+) -> List[List[Tuple[str, str]]]:
     """Get DNS records for a domain.
 
     Args:
         domain (str): Domain to get DNS records for.
-        record_types (list, optional): List of record types to get.
+        record_types (List[str], optional): List of record types to get.
             Defaults to DEFAULT_RECORD_TYPES.
 
     Returns:
-        list: List of DNS records.
+        List[List[Tuple[str, str]]]: List of DNS records.
     """
     records = []
     for record_type in record_types:

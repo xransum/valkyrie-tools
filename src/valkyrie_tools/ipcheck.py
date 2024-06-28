@@ -1,4 +1,5 @@
 """Command-line script for checking ip address info."""
+
 import sys
 from typing import Tuple
 

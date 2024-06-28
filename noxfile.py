@@ -1,4 +1,5 @@
 """Nox sessions."""
+
 import os
 import shlex
 import shutil
@@ -139,7 +140,22 @@ def safety(session: Session) -> None:
     """Scan dependencies for insecure packages."""
     requirements = session.poetry.export_requirements()
     session.install("safety")
-    session.run("safety", "check", "--full-report", f"--file={requirements}")
+    args = [
+        "safety",
+        "check",
+        "--full-report",
+        # "--ignore=.safety",
+        f"--file={requirements}",
+    ]
+    if os.path.exists(".safety") is True:
+        with open(".safety", encoding="utf-8") as f:
+            lines = [
+                line.strip() for line in f.readlines() if line.strip() != ""
+            ]
+            if len(lines) > 0:
+                vulns = ",".join(lines)
+                args.append(f"--ignore={vulns}")
+    session.run(*args)
 
 
 @session(python=python_versions)

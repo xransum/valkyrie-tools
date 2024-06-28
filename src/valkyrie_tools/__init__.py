@@ -1,6 +1,5 @@
 """Valkyrie Tools."""
 
-
 __all__ = ["__version__", "DEFAULT_CONFIG_FILE", "config"]
 
 __appname__ = "valkyrie_tools"

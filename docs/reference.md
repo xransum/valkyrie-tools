@@ -1,10 +1,5 @@
 # Reference
 
-```{eval-rst}
-.. automodule:: valkyrie_tools
-```
-
-
 ## `valkyrie_tools`
 
 ```{eval-rst}
@@ -12,35 +7,148 @@
    :members:
    :undoc-members:
    :show-inheritance:
-
-## `valkyrie_tools`
-
-.. automodule:: openapi_lookup.cli
-    :members:
-    :undoc-members:
-    :show-inheritance:
-
-.. automodule:: openapi_lookup.openapis
-    :members:
-    :undoc-members:
-    :show-inheritance:
 ```
 
-openapi_lookup.cache
-openapi_lookup.commons
-openapi_lookup.config
-openapi_lookup.constants
-openapi_lookup.dnscheck
-openapi_lookup.dns
-openapi_lookup.exceptions
-openapi_lookup.files
-openapi_lookup.httpr
-openapi_lookup.__init__
-openapi_lookup.ipaddr
-openapi_lookup.ipcheck
-openapi_lookup.logger
-openapi_lookup.urlcheck
-openapi_lookup.valkyrie
-openapi_lookup.virustotal
-openapi_lookup.whobe
-openapi_lookup.whois
+## `valkyrie_tools.cache`
+
+```{eval-rst}
+.. automodule:: valkyrie_tools.cache
+   :members:
+   :undoc-members:
+   :show-inheritance:
+```
+
+## `valkyrie_tools.commons`
+
+```{eval-rst}
+.. automodule:: valkyrie_tools.commons
+   :members:
+   :undoc-members:
+   :show-inheritance:
+```
+
+## `valkyrie_tools.config`
+
+```{eval-rst}
+.. automodule:: valkyrie_tools.config
+   :members:
+   :undoc-members:
+   :show-inheritance:
+```
+
+## `valkyrie_tools.constants`
+
+```{eval-rst}
+.. automodule:: valkyrie_tools.constants
+   :members:
+   :undoc-members:
+   :show-inheritance:
+```
+
+## `valkyrie_tools.dns`
+
+```{eval-rst}
+.. automodule:: valkyrie_tools.dns
+   :members:
+   :undoc-members:
+   :show-inheritance:
+```
+
+## `valkyrie_tools.dnscheck`
+
+```{eval-rst}
+.. automodule:: valkyrie_tools.dnscheck
+   :members:
+   :undoc-members:
+   :show-inheritance:
+```
+
+## `valkyrie_tools.exceptions`
+
+```{eval-rst}
+.. automodule:: valkyrie_tools.exceptions
+   :members:
+   :undoc-members:
+   :show-inheritance:
+```
+
+## `valkyrie_tools.files`
+
+```{eval-rst}
+.. automodule:: valkyrie_tools.files
+   :members:
+   :undoc-members:
+   :show-inheritance:
+```
+
+## `valkyrie_tools.httpr`
+
+```{eval-rst}
+.. automodule:: valkyrie_tools.httpr
+   :members:
+   :undoc-members:
+   :show-inheritance:
+```
+
+## `valkyrie_tools.ipaddr`
+
+```{eval-rst}
+.. automodule:: valkyrie_tools.ipaddr
+   :members:
+   :undoc-members:
+   :show-inheritance:
+```
+
+## `valkyrie_tools.ipcheck`
+
+```{eval-rst}
+.. automodule:: valkyrie_tools.ipcheck
+   :members:
+   :undoc-members:
+   :show-inheritance:
+```
+
+## `valkyrie_tools.logger`
+
+```{eval-rst}
+.. automodule:: valkyrie_tools.logger
+   :members:
+   :undoc-members:
+   :show-inheritance:
+```
+
+## `valkyrie_tools.urlcheck`
+
+```{eval-rst}
+.. automodule:: valkyrie_tools.urlcheck
+   :members:
+   :undoc-members:
+   :show-inheritance:
+```
+
+## `valkyrie_tools.valkyrie`
+
+```{eval-rst}
+.. automodule:: valkyrie_tools.valkyrie
+   :members:
+   :undoc-members:
+   :show-inheritance:
+```
+
+## `valkyrie_tools.whobe`
+
+```{eval-rst}
+.. automodule:: valkyrie_tools.whobe
+   :members:
+   :undoc-members:
+   :show-inheritance:
+```
+
+## `valkyrie_tools.whois`
+
+```{eval-rst}
+.. automodule:: valkyrie_tools.whois
+   :members:
+   :undoc-members:
+   :show-inheritance:
+```

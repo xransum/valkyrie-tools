@@ -1,4 +1,5 @@
 """Logger module."""
+
 import logging
 
 

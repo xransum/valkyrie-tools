@@ -1,4 +1,5 @@
 """Test suite for ipcheck command."""
+
 import unittest
 from unittest.mock import patch
 
