@@ -1,4 +1,5 @@
 """Package commons for valkyrie-tools."""
+
 import os
 import re
 import sys
@@ -33,10 +34,11 @@ __all__ = [
 
 
 def common_options(
-    name: str,
-    description: str,
-    version: str,
-) -> click.Command:
+    cmd_type: Union[click.Command, click.Group] = click.Command,
+    name: str = "",
+    description: str = "",
+    version: str = "",
+) -> Union[click.Command, click.Group]:
     """Decorator to add common options to command-line tools.
 
     Allows for built-in command definitions and the flags:
@@ -46,23 +48,24 @@ def common_options(
     -i, --interactive: Enable interactive mode.
 
     Args:
+        cmd_type (Union[click.Command, click.Group]): Click command type.
         name (str): Name of the command.
         description (str): Description of the command.
         version (str): Version of the command in semantic versioning scheme.
 
     Returns:
-        click.Command: Click command function.
+        Union[click.Command, click.Group]: Click command function.
     """
 
-    def decorator(func: click.Command) -> click.Command:
+    def decorator(
+        func: Union[click.Command, click.Group]
+    ) -> Union[click.Command, click.Group]:
         """Bind options to the command function."""
 
-        @click.command(
+        @cmd_type(
             name=name,
             help=description,
-            context_settings=dict(
-                help_option_names=["-h", "--help"],
-            ),
+            context_settings=dict(help_option_names=["-h", "--help"]),
             hidden=True,
         )
         # @click.option(
@@ -91,13 +94,13 @@ def common_options(
             help="Interactive mode.",
             default=False,
         )
-        @click.version_option(
-            version,
-            "-V",
-            "--version",
-            message="%(prog)s %(version)s",
-            help="Show version and exit.",
-        )
+        # @click.version_option(
+        #    version,
+        #    "-V",
+        #    "--version",
+        #    message="%(prog)s %(version)s",
+        #    help="Show version and exit.",
+        # )
         @click.argument(
             "values", nargs=-1, type=click.UNPROCESSED, required=False
         )

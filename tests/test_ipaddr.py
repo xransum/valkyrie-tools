@@ -1,4 +1,5 @@
 """Test suite for the ipaddr module."""
+
 import unittest
 from unittest.mock import MagicMock, Mock, patch
 

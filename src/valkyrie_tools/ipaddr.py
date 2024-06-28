@@ -1,4 +1,5 @@
 """Module for IP address manipulation."""
+
 import ipaddress
 from typing import Any, Dict, List, Optional
 

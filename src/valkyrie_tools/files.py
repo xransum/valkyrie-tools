@@ -1,4 +1,5 @@
 """File utilities."""
+
 import os
 from typing import Optional, Union
 

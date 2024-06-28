@@ -1,4 +1,5 @@
 """Cache module tests."""
+
 import unittest
 from time import sleep
 

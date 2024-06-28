@@ -1,4 +1,5 @@
 """Cache module for persistent data."""
+
 from functools import lru_cache, update_wrapper
 from math import floor
 from time import time
@@ -22,17 +23,7 @@ def _ttl_hash_gen(seconds: int) -> int:
 
 
 class Cache:
-    """A decorator class for caching function results.
-
-    Usage:
-    @cache.memoize
-    def my_function(arg1, arg2):
-        # function body
-
-    @cache.ttl_cache(maxsize=128, typed=False, ttl=-1)
-    def my_function(arg1, arg2):
-        # function body
-    """
+    """A decorator class for caching function results."""
 
     @staticmethod
     def memoize(fn: Callable) -> Callable:

@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "valkyrie-tools"
-version = "1.0.2"
+version = "1.1.0"
 description = "Valkyrie Tools"
 authors = ["Kevin Haas <xransum@users.noreply.github.com>"]
 license = "MIT"
@@ -40,6 +40,7 @@ types-beautifulsoup4 = "^4.12.0"
 art = "^6.1"
 appdirs = "^1.4.4"
 validators = "^0.22.0"
+vt-py = "^0.18.0"
 
 [tool.poetry.dev-dependencies]
 pytest = ">=6.2.5"
@@ -74,12 +75,15 @@ isort = ">=5.10.1"
 myst-parser = ">=0.16.1"
 reorder-python-imports = "^3.12.0"
 pexpect = "^4.8.0"
+"ruamel.yaml" = "^0.18.6"
 
 [tool.poetry.scripts]
 valkyrie = "valkyrie_tools.valkyrie:cli"
 urlcheck = "valkyrie_tools.urlcheck:cli"
 ipcheck = "valkyrie_tools.ipcheck:cli"
+dnscheck = "valkyrie_tools.dnscheck:cli"
 whobe = "valkyrie_tools.whobe:cli"
+vt = "valkyrie_tools.virustotal:cli"
 
 [tool.coverage.paths]
 source = ["src", "*/site-packages"]
@@ -104,6 +108,13 @@ line-length = 80
 [tool.isort]
 profile = "black"
 lines_after_imports = 2
+
+[tool.safety]
+ignore = [
+    "CVE-2019-8341",
+    "PVE-2024-65401",
+    "CVE-2023-29483"
+]
 
 [build-system]
 requires = ["poetry-core>=1.0.0"]

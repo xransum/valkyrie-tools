@@ -1,4 +1,5 @@
 """Logger test module."""
+
 from valkyrie_tools.logger import (
     get_log_level,
     get_verbosity,

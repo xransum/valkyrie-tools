@@ -1,4 +1,5 @@
 """Whobe command-line script."""
+
 import sys
 from typing import Any, Dict, Optional, Tuple
 
@@ -134,6 +135,7 @@ def print_whois(whois: Optional[Dict[str, Any]]) -> None:  # pragma: no cover
 
 
 @common_options(
+    cmd_type=click.command,
     name="whobe",
     description="Check whois on domains and ip addresses.",
     version="0.1.0",

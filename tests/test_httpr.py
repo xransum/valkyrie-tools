@@ -1,4 +1,5 @@
 """Test for valkyrie_tools.httpr module."""
+
 import unittest
 from typing import Any, Generator
 from unittest.mock import Mock, patch

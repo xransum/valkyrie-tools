@@ -1,4 +1,5 @@
 """File module tests."""
+
 import os
 import sys
 import tempfile

@@ -1,4 +1,5 @@
 """Whois utility functions."""
+
 from time import sleep
 from typing import Optional, Union
 

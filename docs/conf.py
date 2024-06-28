@@ -1,4 +1,5 @@
 """Sphinx configuration."""
+
 project = "valkyrie-tools"
 author = "Kevin Haas"
 copyright = f"2020, {author}"
