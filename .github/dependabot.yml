@@ -19,7 +19,7 @@ updates:
     allow:
       - dependency-type: "all"
     versioning-strategy: lockfile-only
-    open-pull-requests-limit: 99
+    open-pull-requests-limit: 15
     commit-message:
       prefix: "⬆️"
       prefix-development: "⬆️ [dev]"
