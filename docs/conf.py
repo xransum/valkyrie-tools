@@ -1,8 +1,11 @@
 """Sphinx configuration."""
 
+from datetime import datetime
+
+
 project = "valkyrie-tools"
 author = "Kevin Haas"
-copyright = f"2020, {author}"
+copyright = f"{datetime.now().year}, {author}"
 extensions = [
     "sphinx.ext.autodoc",
     "sphinx.ext.intersphinx",
