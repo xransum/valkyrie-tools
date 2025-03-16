@@ -36,20 +36,20 @@ jobs:
       PRE_COMMIT_COLOR: "always"
 
     steps:
-      - name: Check out the repository
-        uses: actions/checkout@v3.5.3
+      - name: Checkout the Repository
+        uses: actions/checkout@v4
 
-      - name: Set up Python ${{ matrix.python }}
-        uses: actions/setup-python@v4.6.1
+      - name: Setup Python ${{ matrix.python }}
+        uses: actions/setup-python@v5
         with:
           python-version: ${{ matrix.python }}
 
-      - name: Upgrade pip
+      - name: Upgrade Pip
         run: |
           pip install --constraint="${{ github.workspace }}/.github/workflows/constraints.txt" pip
           pip --version
 
-      - name: Upgrade pip in virtual environments
+      - name: Upgrade Pip in Virtual Environments
         shell: python
         run: |
           import os
@@ -68,7 +68,7 @@ jobs:
           pipx install --pip-args=--constraint="${{ github.workspace }}/.github/workflows/constraints.txt" nox
           nox --version
 
-      - name: Install nox-poetry
+      - name: Install Nox Poetry
         run: |
           pip install .
 
@@ -102,14 +102,15 @@ jobs:
 
       - name: Upload coverage data
         if: always() && matrix.session == 'tests'
-        uses: "actions/upload-artifact@v3.1.2"
+        uses: actions/upload-artifact@v4
         with:
-          name: coverage-data
-          path: ".coverage.*"
+          name: coverage-data-${{ runner.os }}-${{ matrix.python }}
+          path: .coverage.*
+          include-hidden-files: true
 
-      - name: Upload documentation
+      - name: Upload Documentation
         if: matrix.session == 'docs-build'
-        uses: actions/upload-artifact@v3.1.2
+        uses: actions/upload-artifact@v4
         with:
           name: docs
           path: docs/_build
@@ -118,15 +119,15 @@ jobs:
     runs-on: ubuntu-latest
     needs: tests
     steps:
-      - name: Check out the repository
-        uses: actions/checkout@v3.5.3
+      - name: Checkout the Repository
+        uses: actions/checkout@v4
 
       - name: Set up Python
-        uses: actions/setup-python@v4.6.1
+        uses: actions/setup-python@v5
         with:
           python-version: "3.11"
 
-      - name: Upgrade pip
+      - name: Upgrade Pip
         run: |
           pip install --constraint="${{ github.workspace }}/.github/workflows/constraints.txt" pip
           pip --version
@@ -141,22 +142,39 @@ jobs:
           pipx install --pip-args=--constraint="${{ github.workspace }}/.github/workflows/constraints.txt" nox
           nox --version
 
-      - name: Install nox-poetry
+      - name: Install Nox Poetry
         run: |
           pip install .
 
       - name: Download coverage data
-        uses: actions/download-artifact@v3.0.2
+        uses: actions/download-artifact@v4
         with:
-          name: coverage-data
+          # Use pattern since articaft name is dynamic
+          pattern: coverage-data-*
+          path: .coverage.*
+          merge-multiple: true
 
-      - name: Combine coverage data and display human readable report
+      # With the new changes with upload-artifact, the .coverage.* files are now
+      # uploaded as a zip by their running os and Python version. Since the
+      # download-artifact action extracts them, they are now in a folder with the
+      # same name as the zip file. We need to move them to the root directory
+      # for Nox to be able to find them.
+      - name: Extract coverage data
+        run: |
+          ls -la ${{ github.workspace }}/.coverage.*
+          mv -v ${{ github.workspace }}/.coverage.*/.coverage.* ${{ github.workspace }}/
+          rm -vrf ${{ github.workspace }}/.coverage.*/
+
+      - name: Combine Coverage Data and Display Human Readable Report
         run: |
           nox --session=coverage
 
-      - name: Create coverage report
+      - name: Create Coverage Report
         run: |
           nox --session=coverage -- xml
 
-      - name: Upload coverage report
-        uses: codecov/codecov-action@v3.1.4
+      - name: Upload Coverage Report
+        uses: codecov/codecov-action@v5
+        with:
+          token: ${{ secrets.CODECOV_TOKEN }}
+          slug: xransum/valkyrie-tools
