@@ -14,7 +14,7 @@ Project setup:
 pyenv install <python-version>
 pyenv local <python-version>
 poetry install
-````
+```
 
 ## Debugging Safety Vulnerabilities
 
@@ -44,9 +44,9 @@ git checkout -b <type>/<short-description>
 
 Naming conventions:
 
-* `feature/*` – new work
-* `bugfix/*` – defects
-* `hotfix/*` – production issues
+- `feature/*` – new work
+- `bugfix/*` – defects
+- `hotfix/*` – production issues
 
 ### 3. Make changes and commit
 
@@ -58,8 +58,8 @@ git commit -m "<type>: <summary>"
 
 Examples:
 
-* `bugfix: bump filelock to patched version`
-* `chore: update safety ignores for dev-only tooling`
+- `bugfix: bump filelock to patched version`
+- `chore: update safety ignores for dev-only tooling`
 
 ### 4. Push the branch
 
