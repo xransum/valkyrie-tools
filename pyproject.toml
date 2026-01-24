@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "valkyrie-tools"
-version = "1.2.2"
+version = "1.3.0"
 description = "Valkyrie Tools"
 authors = ["Kevin Haas <xransum@users.noreply.github.com>"]
 license = "MIT"
@@ -13,7 +13,7 @@ classifiers = [
     "Programming Language :: Python :: 3.9",
     "Programming Language :: Python :: 3.10",
     "Programming Language :: Python :: 3.11",
-    #"Programming Language :: Python :: 3.12",
+    "Programming Language :: Python :: 3.12",
 ]
 
 [tool.poetry.urls]
@@ -23,7 +23,7 @@ Changelog = "https://github.com/xransum/valkyrie-tools/releases"
 # Dumb, but can't go with 3.12+ due to the drop of imp in 3.12 and
 # the fact whois depends on it.
 # https://docs.python.org/3.12/whatsnew/3.12.html#removed-modules
-python = ">=3.8,<3.12"
+python = ">=3.8,<4.0"
 nox = ">=2020.8.22"
 tomlkit = ">=0.7"
 packaging = ">=20.9"
