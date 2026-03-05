@@ -9,9 +9,9 @@ stored in INI format.
 
 import configparser
 import os
-from typing import Any, Dict
+from typing import Any, Dict, List, Optional
 
-from appdirs import user_config_dir
+from appdirs import user_config_dir  # type: ignore[import-untyped]
 
 
 class Config:
@@ -27,7 +27,7 @@ class Config:
     def __init__(
         self,
         config_name: str,
-        defaults: Dict[str, Dict[str, Any]] = None,
+        defaults: Optional[Dict[str, Dict[str, Any]]] = None,
     ):
         """Initialize the Config object.
 
@@ -44,7 +44,7 @@ class Config:
         if self.read() == [] and self.defaults is not None:
             self.set_defaults()
 
-    def read(self):
+    def read(self) -> List[str]:
         """Load the configuration file from disk.
 
         Reads :attr:`config_file` via :class:`configparser.ConfigParser`.
@@ -57,7 +57,7 @@ class Config:
         """
         return self.config.read(self.config_file)
 
-    def save(self):
+    def save(self) -> None:
         """Write the current in-memory configuration to disk.
 
         Serialises :attr:`config` to :attr:`config_file` using
@@ -81,7 +81,7 @@ class Config:
         """
         return self.config.get(section, option, fallback=fallback)
 
-    def set(self, section: str, option: str, value: Any):
+    def set(self, section: str, option: str, value: Any) -> None:
         """Set the value of an option in a section.
 
         Args:
@@ -95,7 +95,7 @@ class Config:
         self.config.set(section, option, str(value))
         self.save()
 
-    def remove_section(self, section: str):
+    def remove_section(self, section: str) -> None:
         """Remove a section from the configuration file.
 
         Args:
@@ -104,7 +104,7 @@ class Config:
         self.config.remove_section(section)
         self.save()
 
-    def remove_option(self, section: str, option: str):
+    def remove_option(self, section: str, option: str) -> None:
         """Remove an option from a section.
 
         Args:
@@ -114,7 +114,7 @@ class Config:
         self.config.remove_option(section, option)
         self.save()
 
-    def set_defaults(self):
+    def set_defaults(self) -> None:
         """Apply :attr:`defaults` to the in-memory configuration and save.
 
         Iterates over all ``section -> {option: value}`` pairs in
@@ -123,6 +123,8 @@ class Config:
         Called automatically by :meth:`__init__` when ``defaults`` is
         provided and no configuration file was found on disk.
         """
+        if self.defaults is None:
+            return
         for section, options in self.defaults.items():
             for option, value in options.items():
                 if not self.config.has_section(section):

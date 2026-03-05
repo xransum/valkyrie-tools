@@ -76,13 +76,13 @@ def is_valid_record_type(record_type: str) -> bool:
         False
     """
     try:
-        return dns.rdatatype.from_text(record_type) is not None
+        return dns.rdatatype.from_text(record_type) is not None  # type: ignore[no-untyped-call]
 
     except (dns.rdatatype.UnknownRdatatype, AttributeError):
         return False
 
 
-def get_rdns_record(ipaddr: str) -> list:
+def get_rdns_record(ipaddr: str) -> List[Tuple[str, str]]:
     """Get reverse DNS record for an IP address.
 
     Args:
@@ -98,13 +98,13 @@ def get_rdns_record(ipaddr: str) -> list:
         raise ValueError(f"Invalid IP address: {ipaddr}")
 
     # Configure DNS resolver with default name servers
-    resolver = dns.resolver.Resolver(configure=False)
+    resolver = dns.resolver.Resolver(configure=False)  # type: ignore[no-untyped-call]
     resolver.nameservers = DEFAULT_NAMESERVERS
     resolver.search = []
 
     try:
         # Retrieve reverse DNS records for the IP address
-        records = resolver.resolve(dns.reversename.from_address(ipaddr), "PTR")
+        records = resolver.resolve(dns.reversename.from_address(ipaddr), "PTR")  # type: ignore[no-untyped-call]
         return [(record.rdtype.name, record.to_text()) for record in records]
     except (
         dns.exception.SyntaxError,
@@ -143,7 +143,7 @@ def get_dns_record(
         raise ValueError(f"Invalid record type: {record_type}")
 
     # Configure DNS resolver with default name servers
-    resolver = dns.resolver.Resolver(configure=False)
+    resolver = dns.resolver.Resolver(configure=False)  # type: ignore[no-untyped-call]
     resolver.nameservers = nameservers
     resolver.search = []
 
@@ -154,7 +154,7 @@ def get_dns_record(
     else:
         try:
             # Retrieve DNS records for the domain
-            records = resolver.resolve(domain, record_type)  # Example: A record
+            records = resolver.resolve(domain, record_type)  # type: ignore[no-untyped-call]  # noqa: B950
             for record in records:
                 type_name = record.rdtype.name
                 value = record.to_text()
@@ -177,7 +177,7 @@ def get_dns_record(
 
 def get_dns_records(
     domain: str, record_types: List[str] = DEFAULT_RECORD_TYPES
-) -> List[List[Tuple[str, str]]]:
+) -> List[Tuple[str, str]]:
     """Get DNS records for a domain.
 
     Args:
@@ -186,7 +186,8 @@ def get_dns_records(
             Defaults to DEFAULT_RECORD_TYPES.
 
     Returns:
-        List[List[Tuple[str, str]]]: List of DNS records.
+        List[Tuple[str, str]]: Flat list of (record_type, value) tuples
+        across all queried record types.
 
     Example:
         >>> from valkyrie_tools.dns import get_dns_records
@@ -194,7 +195,7 @@ def get_dns_records(
         >>> isinstance(records, list)
         True
     """
-    records = []
+    records = []  # type: List[Tuple[str, str]]
     for record_type in record_types:
         records.extend(get_dns_record(domain, record_type))
 

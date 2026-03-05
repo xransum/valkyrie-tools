@@ -1,6 +1,7 @@
 """Test for valkyrie_tools.dns module."""
 
 import unittest
+from typing import Any, List
 from unittest.mock import Mock, patch
 
 import dns.resolver
@@ -17,21 +18,21 @@ from valkyrie_tools.dns import (
 class TestValidRecordType(unittest.TestCase):
     """Test function is valid record type."""
 
-    def test_valid_record_type(self):
+    def test_valid_record_type(self) -> None:
         """Test valid record type."""
         for record_type_name in RECORD_TYPES:
             self.assertTrue(is_valid_record_type(record_type_name))
 
-    def test_invalid_record_type(self):
+    def test_invalid_record_type(self) -> None:
         """Test invalid record type."""
         for record_type_name in ["INVALID", "INVALID2", "", None]:
-            self.assertFalse(is_valid_record_type(record_type_name))
+            self.assertFalse(is_valid_record_type(record_type_name))  # type: ignore[arg-type]
 
 
 class TestGetRdnsRecord(unittest.TestCase):
     """Test function get reverse DNS record."""
 
-    def test_is_valid_ip_addr_exception(self):
+    def test_is_valid_ip_addr_exception(self) -> None:
         """Test value error."""
         # Mock the values
         mock_values = ["invalid", "invalid2", ""]
@@ -80,7 +81,7 @@ class TestGetRdnsRecord(unittest.TestCase):
         """Test get reverse DNS record."""
         # Mock the values
         mock_ip_addr = "192.168.1.1"
-        mock_result = []
+        mock_result: List[Any] = []
         mock_side_effects = [
             dns.exception.SyntaxError,
             dns.resolver.NXDOMAIN,

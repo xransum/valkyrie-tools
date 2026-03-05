@@ -15,7 +15,7 @@ Results from the remote endpoints are TTL-cached for 3600 seconds using
 """
 
 import ipaddress
-from typing import Any, Dict, List, Optional
+from typing import Any, Dict, List, Optional, cast
 
 import requests
 
@@ -79,14 +79,13 @@ def is_ipv4_addr(ipaddr: str) -> bool:
         >>> is_ipv4_addr("::1")
         False
     """
-    if isinstance(ipaddr, str):
-        try:
-            ip = ipaddress.ip_address(ipaddr)
-            return isinstance(ip, ipaddress.IPv4Address)
-        except ValueError:
-            return False
-
-    return False
+    try:
+        if not isinstance(ipaddr, str):
+            return False  # type: ignore[unreachable]  # noqa: B950
+        ip = ipaddress.ip_address(ipaddr)
+        return isinstance(ip, ipaddress.IPv4Address)
+    except ValueError:
+        return False
 
 
 def is_ipv6_addr(ipaddr: str) -> bool:
@@ -105,14 +104,13 @@ def is_ipv6_addr(ipaddr: str) -> bool:
         >>> is_ipv6_addr("192.168.1.1")
         False
     """
-    if isinstance(ipaddr, str):
-        try:
-            ip = ipaddress.ip_address(ipaddr)
-            return isinstance(ip, ipaddress.IPv6Address)
-        except ValueError:
-            return False
-
-    return False
+    try:
+        if not isinstance(ipaddr, str):
+            return False  # type: ignore[unreachable]  # noqa: B950
+        ip = ipaddress.ip_address(ipaddr)
+        return isinstance(ip, ipaddress.IPv6Address)
+    except ValueError:
+        return False
 
 
 def is_valid_ip_addr(ipaddr: str) -> bool:
@@ -217,13 +215,13 @@ def is_ip_tor_node(ipaddr: str, cached: bool = True) -> bool:
         bool: True if ipaddr is a Tor exit node.
     """
     if cached is False:
-        get_tor_node_ip_addrs.clear_cache()
+        get_tor_node_ip_addrs.clear_cache()  # type: ignore[attr-defined]  # noqa: B950
 
     nodes = get_tor_node_ip_addrs()
     return ipaddr in nodes
 
 
-def get_ip_info(ipaddr: str) -> Optional[dict]:
+def get_ip_info(ipaddr: str) -> Optional[Dict[str, Any]]:
     """Get geolocation and network metadata for an IP address.
 
     Queries the ipinfo.io JSON API.  Only valid IP addresses (as determined
@@ -234,23 +232,23 @@ def get_ip_info(ipaddr: str) -> Optional[dict]:
         ipaddr (str): A valid IPv4 or IPv6 address string.
 
     Returns:
-        Optional[dict]: A dictionary of IP metadata (keys include ``ip``,
-        ``hostname``, ``city``, ``region``, ``country``, ``loc``, ``org``,
-        ``postal``, ``timezone``) on success, or ``None`` if ``ipaddr`` is
-        not a valid IP address.
+        Optional[Dict[str, Any]]: A dictionary of IP metadata (keys include
+        ``ip``, ``hostname``, ``city``, ``region``, ``country``, ``loc``,
+        ``org``, ``postal``, ``timezone``) on success, or ``None`` if
+        ``ipaddr`` is not a valid IP address.
     """
     if is_valid_ip_addr(ipaddr):
         r = requests.get(
             IPINFO_API_ENDPOINT % ipaddr, timeout=DEFAULT_REQUEST_TIMEOUT
         )
         r.raise_for_status()
-        return r.json()
+        return cast(Dict[str, Any], r.json())
 
     return None
 
 
 @cache.ttl_cache(maxsize=128, ttl=3600)
-def get_aws_ip_ranges() -> Optional[Dict[str, Any]]:
+def get_aws_ip_ranges() -> List[Any]:
     """Get the public IP ranges published by AWS.
 
     Fetches the AWS IP ranges JSON from
@@ -261,8 +259,8 @@ def get_aws_ip_ranges() -> Optional[Dict[str, Any]]:
     seconds (1 hour).
 
     Returns:
-        Optional[List[dict]]: A flat list of prefix metadata dicts on
-        success, or ``None`` if the endpoint returns a non-2xx HTTP status.
+        List[Any]: A flat list of prefix metadata dicts on
+        success, or an empty list if the endpoint returns a non-2xx HTTP status.
     """
     try:
         r = requests.get(
@@ -280,7 +278,7 @@ def get_aws_ip_ranges() -> Optional[Dict[str, Any]]:
             cidrs.extend(prefixes)
         return cidrs
     except requests.exceptions.HTTPError:
-        return None
+        return []
 
 
 def is_aws_ip_addr(ipaddr: str) -> bool:
@@ -327,7 +325,7 @@ def get_cloudflare_range(endpoint: str) -> Optional[List[str]]:
 
 
 @cache.ttl_cache(maxsize=128, ttl=3600)
-def get_cloudflare_ip_ranges() -> Optional[Dict[str, Any]]:
+def get_cloudflare_ip_ranges() -> List[str]:
     """Get the combined IPv4 and IPv6 IP ranges published by Cloudflare.
 
     Calls :func:`get_cloudflare_range` for both
@@ -336,18 +334,18 @@ def get_cloudflare_ip_ranges() -> Optional[Dict[str, Any]]:
     Results are TTL-cached for 3600 seconds (1 hour).
 
     Returns:
-        Optional[List[str]]: A flat list of CIDR strings covering all
+        List[str]: A flat list of CIDR strings covering all
         Cloudflare-announced IPv4 and IPv6 ranges.  Returns an empty list
         if both endpoint requests fail.
     """
-    ip_ranges = []
+    ip_ranges: List[str] = []
 
-    ip_ranges.extend(
-        [
-            *get_cloudflare_range(CLOUDFLARE_IPV4_RANGES_ENDPOINT),
-            *get_cloudflare_range(CLOUDFLARE_IPV6_RANGES_ENDPOINT),
-        ]
-    )
+    v4 = get_cloudflare_range(CLOUDFLARE_IPV4_RANGES_ENDPOINT)
+    v6 = get_cloudflare_range(CLOUDFLARE_IPV6_RANGES_ENDPOINT)
+    if v4:
+        ip_ranges.extend(v4)
+    if v6:
+        ip_ranges.extend(v6)
 
     return ip_ranges
 
@@ -372,7 +370,7 @@ def is_cloudflare_ip_addr(ipaddr: str) -> bool:
 
 
 @cache.ttl_cache(maxsize=128, ttl=3600)
-def get_fastly_ip_ranges() -> Optional[Dict[str, Any]]:
+def get_fastly_ip_ranges() -> List[str]:
     """Get the public IP ranges published by Fastly.
 
     Fetches the Fastly public IP list JSON from
@@ -380,7 +378,7 @@ def get_fastly_ip_ranges() -> Optional[Dict[str, Any]]:
     seconds (1 hour).
 
     Returns:
-        Optional[List[str]]: A list of CIDR strings covering all
+        List[str]: A list of CIDR strings covering all
         Fastly-announced IP ranges on success, or an empty list if the
         endpoint returns a non-2xx HTTP status.
     """

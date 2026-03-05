@@ -39,7 +39,7 @@ def print_ip_whois(whois: Optional[Dict[str, Any]]) -> None:  # pragma: no cover
     Args:
         whois (Optional[Dict[str, Any]]): Parsed IP WHOIS record, or ``None``.
     """
-    if isinstance(whois, dict) is False:
+    if not isinstance(whois, dict):
         click.echo("No whois data.", err=True)
     else:
         click.echo(
@@ -122,7 +122,7 @@ def print_whois(whois: Optional[Dict[str, Any]]) -> None:  # pragma: no cover
     Args:
         whois (Optional[Dict[str, Any]]): Parsed domain WHOIS record, or ``None``.
     """
-    if isinstance(whois, dict) is False:
+    if not isinstance(whois, dict):
         click.echo(NO_WHOIS_MSG, err=True)
     else:
         click.echo(
@@ -168,7 +168,7 @@ def print_whois(whois: Optional[Dict[str, Any]]) -> None:  # pragma: no cover
         click.echo("   Name Servers: ")
         name_servers = whois.get("name_servers", ["None"])
         if isinstance(name_servers, (list, tuple)):
-            for ns in whois["name_servers"]:
+            for ns in name_servers:
                 click.echo(f"      - {ns}")
         else:
             click.echo(f"     - {name_servers}")

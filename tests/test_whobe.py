@@ -1,9 +1,8 @@
 """Unittests for the whobe cli command."""
 
 import unittest
-from unittest.mock import patch
-
-from click.testing import CliRunner
+from typing import Any, Dict, Generator
+from unittest.mock import MagicMock, patch
 
 from valkyrie_tools.whobe import NO_WHOIS_MSG, cli, print_ip_whois
 
@@ -55,18 +54,20 @@ class TestWhobe(BaseCommandTest, unittest.TestCase):
         """Set up test fixtures, if any."""
         super().setUp()
 
-        self.mock_whois_data = {key: "Hello, World!" for key in whois_keys}
-        self.mock_whois_ip_data = {
+        self.mock_whois_data: Dict[str, Any] = {
+            key: "Hello, World!" for key in whois_keys
+        }
+        self.mock_whois_ip_data: Dict[str, Any] = {
             key: "Hello, World!" for key in whois_ip_keys
         }
         self.mock_whois_ip_data["nets"] = []
 
-    def tearDown(self) -> CliRunner:
+    def tearDown(self) -> None:
         """Tear down test fixtures, if any."""
         super().tearDown()
 
     @patch("valkyrie_tools.whobe.get_ip_whois")
-    def test_ip_whois(self, mock_get_ip_whois) -> None:
+    def test_ip_whois(self, mock_get_ip_whois: MagicMock) -> None:
         """Test ip address."""
         mock_ip_addr = "192.168.1.1"
         mock_result = self.mock_whois_ip_data.copy()
@@ -78,7 +79,7 @@ class TestWhobe(BaseCommandTest, unittest.TestCase):
         self.assertEqual(result.exit_code, 0)
 
     @patch("valkyrie_tools.whobe.get_ip_whois")
-    def test_ip_whois_none(self, mock_get_ip_whois) -> None:
+    def test_ip_whois_none(self, mock_get_ip_whois: MagicMock) -> None:
         """Test ip address."""
         mock_ip_addr = "192.168.1.1"
         mock_get_ip_whois.return_value = None
@@ -88,7 +89,7 @@ class TestWhobe(BaseCommandTest, unittest.TestCase):
         self.assertEqual(result.exit_code, 0)
 
     @patch("valkyrie_tools.whobe.get_whois")
-    def test_whois(self, mock_get_whois) -> None:
+    def test_whois(self, mock_get_whois: MagicMock) -> None:
         """Test domain whois."""
         mock_domain = "example.com"
         mock_result = self.mock_whois_data.copy()
@@ -100,7 +101,7 @@ class TestWhobe(BaseCommandTest, unittest.TestCase):
         self.assertEqual(result.exit_code, 0)
 
     @patch("valkyrie_tools.whobe.get_whois")
-    def test_whois_none(self, mock_get_whois) -> None:
+    def test_whois_none(self, mock_get_whois: MagicMock) -> None:
         """Test domain whois."""
         mock_domain = "example.com"
         mock_get_whois.return_value = None
@@ -110,12 +111,12 @@ class TestWhobe(BaseCommandTest, unittest.TestCase):
         self.assertEqual(result.exit_code, 0)
 
     @patch("valkyrie_tools.whobe.get_whois")
-    def test_whois_multiple_domains(self, mock_get_whois) -> None:
+    def test_whois_multiple_domains(self, mock_get_whois: MagicMock) -> None:
         """Test domain whois."""
         mock_domains = ["example.com", "www.example.com"]
         mock_base_result = self.mock_whois_data
 
-        def side_effect():
+        def side_effect() -> Generator[Dict[str, Any], None, None]:
             for d in range(len(mock_domains)):
                 mock_domain = mock_domains[d]
                 mock_result = mock_base_result.copy()
@@ -132,7 +133,7 @@ class TestWhobe(BaseCommandTest, unittest.TestCase):
         self.assertEqual(result.exit_code, 0)
 
     @patch("valkyrie_tools.whobe.click.echo")
-    def test_print_ip_whois_with_no_data(self, mock_echo):
+    def test_print_ip_whois_with_no_data(self, mock_echo: MagicMock) -> None:
         """Test print_ip_whois with no data."""
         # Arrange
         mock_whois_data = None

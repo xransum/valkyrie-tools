@@ -1,7 +1,7 @@
 """Tests for dnscheck module."""
 
 import unittest
-from unittest.mock import patch
+from unittest.mock import MagicMock, patch
 
 from valkyrie_tools.dnscheck import cli
 
@@ -13,15 +13,15 @@ class TestDnscheck(BaseCommandTest, unittest.TestCase):
 
     command = cli
 
-    def setUp(self):
+    def setUp(self) -> None:
         """Set up test fixtures, if any."""
         super().setUp()
 
-    def tearDown(self):
+    def tearDown(self) -> None:
         """Tear down test fixtures, if any."""
         super().tearDown()
 
-    def test_successful(self):
+    def test_successful(self) -> None:
         """Test for success."""
         # Mock the arguments
         mock_ip = "1.1.1.1"
@@ -31,7 +31,7 @@ class TestDnscheck(BaseCommandTest, unittest.TestCase):
         self.assertIn(mock_ip, result.output)
 
     @patch("valkyrie_tools.dnscheck.get_dns_records")
-    def test_no_record_types(self, mock_get_dns_records):
+    def test_no_record_types(self, mock_get_dns_records: MagicMock) -> None:
         """Test for no record types."""
         # Mock the responses
         # We need to test the flag for rtypes, passing an empty
@@ -39,7 +39,7 @@ class TestDnscheck(BaseCommandTest, unittest.TestCase):
         pass
 
     @patch("valkyrie_tools.dnscheck.get_dns_records")
-    def test_multiple_ip(self, mock_get_dns_records):
+    def test_multiple_ip(self, mock_get_dns_records: MagicMock) -> None:
         """Test for multiple ip addresses."""
         # Mock the responses
         mock_args = ["1.1.1.1"]

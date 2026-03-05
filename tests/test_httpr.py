@@ -22,10 +22,7 @@ from valkyrie_tools.httpr import (
 )
 
 
-META_REFRESH_HTML = (
-    '<html><head><meta http-equiv="refresh" content="0;URL=\'%s\'" /> '
-    "</head></html>"
-)
+META_REFRESH_HTML = '<html><head><meta http-equiv="refresh" content="0;URL=\'%s\'" /> </head></html>'  # noqa: B950
 
 
 class TestUserAgentList(unittest.TestCase):
@@ -244,7 +241,9 @@ class TestExtractRedirectsFromHTMLMeta(unittest.TestCase):
 class TestGetNextUrl(unittest.TestCase):
     """Test for valkyrie_tools.httpr.get_next_url function."""
 
-    def setUp(self: unittest.TestCase) -> None:
+    mock_response: Any
+
+    def setUp(self) -> None:
         """Set up the mock response object."""
         self.mock_response = Mock()
         self.mock_response.headers = {
@@ -254,12 +253,12 @@ class TestGetNextUrl(unittest.TestCase):
         }
         self.mock_response.text = "Hello World!"
 
-    def tearDown(self: unittest.TestCase) -> None:
+    def tearDown(self) -> None:
         """Reset the mock response object."""
         self.mock_response = None
 
     def test_successful_get_next_url(
-        self: unittest.TestCase,
+        self,
     ) -> None:
         """Test get_next_url with a successful request."""
         url = "https://example.com"
@@ -268,7 +267,7 @@ class TestGetNextUrl(unittest.TestCase):
         self.assertEqual(result, url)
 
     def test_successful_get_next_url_alt_key(
-        self: unittest.TestCase,
+        self,
     ) -> None:
         """Test get_next_url with a successful request."""
         url = "https://example.com"
@@ -277,14 +276,14 @@ class TestGetNextUrl(unittest.TestCase):
         self.assertEqual(result, url)
 
     def test_failed_get_next_url(
-        self: unittest.TestCase,
+        self,
     ) -> None:
         """Test get_next_url with a failed request."""
         result = get_next_url(self.mock_response)
         self.assertIsNone(result)
 
     def test_failed_get_next_url_with_exception(
-        self: unittest.TestCase,
+        self,
     ) -> None:
         """Test get_next_url with a failed request."""
         self.mock_response = Exception("Failed to make a request")
@@ -373,7 +372,7 @@ class TestBuildRedirectChain(unittest.TestCase):
             if u < len(url_chain) - 1:
                 next_url = url_chain[u + 1]
 
-            mock_url, mock_res = result[u]
+            mock_url, mock_res = result[u]  # type: ignore[misc]
             self.assertEqual(url, mock_url)
             self.assertEqual(next_url, mock_res.headers.get("Location", None))  # type: ignore
 
@@ -495,12 +494,12 @@ class TestBuildRedirectChain(unittest.TestCase):
             if u < len(url_chain) - 1:
                 next_url = url_chain[u + 1]
 
-            mock_url, mock_res = result[u]
+            mock_url, mock_res = result[u]  # type: ignore[misc]
             self.assertEqual(url, mock_url)
 
             # TODO: No entirely the best way to test this
             if next_url is not None:
-                self.assertIn(next_url, mock_res.text)
+                self.assertIn(next_url, mock_res.text)  # type: ignore[union-attr]
 
     @patch("valkyrie_tools.httpr.make_request")
     def test_redirect_chain_with_text_content_type(

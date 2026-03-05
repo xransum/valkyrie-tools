@@ -3,8 +3,11 @@
 Inherited unittest class mixin imported from command test suites.
 """
 
+import unittest
+from typing import Optional
 from unittest.mock import patch
 
+import click
 from click.testing import CliRunner
 
 from valkyrie_tools.constants import (  # HELP_VERSION_TEXT,
@@ -13,22 +16,25 @@ from valkyrie_tools.constants import (  # HELP_VERSION_TEXT,
 )
 
 
-class BaseCommandTest:
+class BaseCommandTest(unittest.TestCase):
     """Base test case for commands with shared args and flags."""
 
-    # Overridden in subclasses
-    command = None
+    # Overridden in subclasses; typed Optional so mypy accepts the class-level
+    # default while subclasses set it to a real click.BaseCommand.
+    command: Optional[click.BaseCommand] = None
 
     def setUp(self) -> None:
         """Set up test fixtures, if any."""
-        self.runner = CliRunner()
+        self.runner: CliRunner = CliRunner()
 
-    def tearDown(self) -> CliRunner:
+    def tearDown(self) -> None:
         """Tear down test fixtures, if any."""
-        self.runner = None
+        self.runner = CliRunner()  # reset to a fresh runner
 
     def test_help_option(self) -> None:
         """Test --help flag."""
+        if self.command is None:
+            self.skipTest("BaseCommandTest requires a subclass to set command")
         result = self.runner.invoke(self.command, ["--help"])
         # self.assertIn("Show version and exit.", result.output)
         self.assertIn("Usage: ", result.output)
@@ -36,6 +42,8 @@ class BaseCommandTest:
 
     def test_interactive_mode(self) -> None:
         """Test --interactive flag."""
+        if self.command is None:
+            self.skipTest("BaseCommandTest requires a subclass to set command")
         # Mock the sys.stdin read method to simulate user input.
         with patch("valkyrie_tools.commons.sys") as mock_sys:
             # Override isatty to simulate a terminal and simulate
@@ -53,6 +61,8 @@ class BaseCommandTest:
 
     def test_empty_args(self) -> None:
         """Test empty args for exit code of 1."""
+        if self.command is None:
+            self.skipTest("BaseCommandTest requires a subclass to set command")
         result = self.runner.invoke(self.command, [])
         self.assertIn(NO_ARGS_TEXT, result.output)
         self.assertEqual(result.exit_code, 1)

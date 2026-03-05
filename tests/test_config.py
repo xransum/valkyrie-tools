@@ -105,3 +105,10 @@ class TestConfig(unittest.TestCase):
         self.assertEqual(
             self.mock_config.get("test_section", "test_key"), "test_value"
         )
+
+    def test_set_defaults_none(self) -> None:
+        """Test set_defaults returns early when defaults is None."""
+        self.mock_config.defaults = None
+        # Should return without error and make no changes.
+        self.mock_config.set_defaults()
+        self.assertIsNone(self.mock_config.defaults)

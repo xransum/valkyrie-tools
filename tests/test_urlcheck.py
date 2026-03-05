@@ -1,7 +1,7 @@
 """Urlcheck test module."""
 
 import unittest
-from typing import List, Optional, Tuple, Union
+from typing import List, Optional, Tuple, Union, cast
 from unittest.mock import MagicMock, Mock, patch
 
 import requests
@@ -58,7 +58,10 @@ class TestURLCheckCLI(BaseCommandTest, unittest.TestCase):
         meta_redirect: bool = False,
     ) -> List[Union[str, Mock]]:
         """Create a mock response."""
+        from requests import Response
+
         mock_response = Mock()
+        mock_response.__class__ = Response  # type: ignore[assignment]  # noqa: B950
         mock_response.headers = {
             "Content-Type": "text/html",
             "Content-Length": "11",
@@ -117,20 +120,20 @@ class TestURLCheckCLI(BaseCommandTest, unittest.TestCase):
             # If it's the last chain, don't add another response, and
             # remove the Location header and text from the response.
             if max_next is not None and c >= max_next:
-                mock_response[1].headers.pop("Location", None)
-                mock_response[1].text = "Hello World!"
+                cast(Mock, mock_response[1]).headers.pop("Location", None)
+                cast(Mock, mock_response[1]).text = "Hello World!"
                 break
 
         if single_chain is True:
-            mock_responses = mock_responses[0]
+            return mock_responses[0]
 
         return mock_responses
 
-    def setUp(self):
+    def setUp(self) -> None:
         """Set up test fixtures, if any."""
         super().setUp()
 
-    def tearDown(self):
+    def tearDown(self) -> None:
         """Tear down test fixtures, if any."""
         super().tearDown()
 
@@ -138,7 +141,7 @@ class TestURLCheckCLI(BaseCommandTest, unittest.TestCase):
     def test_show_headers_option(self, mock_make_request: MagicMock) -> None:
         """Test --show-headers option."""
         mock_chain_link = self._create_mock_responses(URL_MOCKS[0])
-        url, mock_response = mock_chain_link
+        url = cast(str, mock_chain_link[0])
         mock_make_request.return_value = mock_chain_link
         result = self.runner.invoke(self.command, [url, "--show-headers"])
 
@@ -151,7 +154,7 @@ class TestURLCheckCLI(BaseCommandTest, unittest.TestCase):
     ) -> None:
         """Test --no-truncate option."""
         mock_chain_link = self._create_mock_responses(URL_MOCKS[0])
-        url, mock_response = mock_chain_link
+        url = cast(str, mock_chain_link[0])
         mock_make_request.return_value = mock_chain_link
         result = self.runner.invoke(
             self.command, [url, "--show-headers", "--no-truncate"]
@@ -164,7 +167,7 @@ class TestURLCheckCLI(BaseCommandTest, unittest.TestCase):
     def test_interactive_mode(self, mock_make_request: MagicMock) -> None:
         """Test interactive mode."""
         mock_chain_link = self._create_mock_responses(URL_MOCKS[0])
-        url, mock_response = mock_chain_link
+        url = cast(str, mock_chain_link[0])
         mock_make_request.return_value = mock_chain_link
 
         # Mock the sys.stdin read method to simulate user input.
@@ -201,7 +204,7 @@ class TestURLCheckCLI(BaseCommandTest, unittest.TestCase):
     def test_single_url(self, mock_make_request: MagicMock) -> None:
         """Test single url."""
         mock_chain_link = self._create_mock_responses(URL_MOCKS[0])
-        url, mock_response = mock_chain_link
+        url = cast(str, mock_chain_link[0])
         mock_make_request.return_value = mock_chain_link
         result = self.runner.invoke(self.command, url)
 
@@ -212,7 +215,7 @@ class TestURLCheckCLI(BaseCommandTest, unittest.TestCase):
     def test_single_url_piped(self, mock_make_request: MagicMock) -> None:
         """Test single piped url."""
         mock_chain_link = self._create_mock_responses(URL_MOCKS[0])
-        url, mock_response = mock_chain_link
+        url = cast(str, mock_chain_link[0])
         mock_make_request.return_value = mock_chain_link
         result = self.runner.invoke(self.command, input=url)
 
@@ -223,7 +226,7 @@ class TestURLCheckCLI(BaseCommandTest, unittest.TestCase):
     def test_duplicate_urls(self, mock_make_request: MagicMock) -> None:
         """Test duplicate urls."""
         mock_chain_link = self._create_mock_responses(URL_MOCKS[0])
-        url, mock_response = mock_chain_link
+        url = cast(str, mock_chain_link[0])
         mock_make_request.return_value = mock_chain_link
         result = self.runner.invoke(self.command, f"{url} {url}")
 
@@ -338,6 +341,16 @@ class TestURLCheckCLI(BaseCommandTest, unittest.TestCase):
         result = self.runner.invoke(self.command, url)
         print(result.output)
         self.assertIn(REQUESTS_TOO_MANY_REDIRECTS_ERROR_MESSAGE, result.output)
+
+    @patch("valkyrie_tools.urlcheck.build_redirect_chain")
+    def test_response_none_hop(
+        self, mock_build_redirect_chain: MagicMock
+    ) -> None:
+        """Test hop with None response is silently skipped."""
+        url, *_ = URL_MOCKS[0]
+        mock_build_redirect_chain.return_value = [[url, None]]
+        result = self.runner.invoke(self.command, url)
+        self.assertEqual(result.exit_code, 0)
 
     @patch("valkyrie_tools.httpr.make_request")
     def test_request_status_codes(self, mock_make_request: MagicMock) -> None:

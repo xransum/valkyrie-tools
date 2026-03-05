@@ -1,10 +1,10 @@
 """Whois utility functions."""
 
 from time import sleep
-from typing import Optional, Union
+from typing import Any, Dict, Optional, Union
 
-import ipwhois
-import whois
+import ipwhois  # type: ignore[import-untyped]
+import whois  # type: ignore[import-untyped]
 from ipwhois import IPWhois
 
 
@@ -64,7 +64,7 @@ def get_whois(
     return w
 
 
-def get_ip_whois(ipaddr: str) -> Optional[dict]:
+def get_ip_whois(ipaddr: str) -> Optional[Dict[str, Any]]:
     """Get WHOIS information for an IP address.
 
     Performs a WHOIS lookup via :class:`ipwhois.IPWhois`, querying ASN data
