@@ -2,7 +2,8 @@
 
 Entry point for the ``valkyrie`` command group, which exposes a ``config``
 sub-group with ``set``, ``get``, ``delete``, and ``list`` sub-commands for
-managing the user's persistent configuration file.
+managing the user's persistent configuration file, and a ``virustotal``
+sub-group for querying the VirusTotal API.
 """
 
 from typing import Optional
@@ -10,6 +11,7 @@ from typing import Optional
 import click
 
 from . import __version__, configs
+from .virustotal import cli as virustotal_group
 
 
 # @common_options(
@@ -35,8 +37,12 @@ def cli() -> None:
     * ``config get <key>`` - read a configuration key
     * ``config delete <key>`` - remove a configuration key
     * ``config list [key]`` - list all keys (or filter by name)
+    * ``virustotal`` - VirusTotal threat intelligence sub-commands
     """
     pass  # pragma: no cover
+
+
+cli.add_command(virustotal_group)
 
 
 @cli.group(name="config")

@@ -49,6 +49,13 @@ whobe
    :prog: whobe
    :nested: full
 
+virustotal
+^^^^^^^^^^
+
+.. click:: valkyrie_tools.virustotal:cli
+   :prog: virustotal
+   :nested: full
+
 
 API Reference
 -------------
@@ -201,6 +208,15 @@ valkyrie_tools.whois
 ^^^^^^^^^^^^^^^^^^^^
 
 .. automodule:: valkyrie_tools.whois
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
+
+valkyrie_tools.virustotal
+^^^^^^^^^^^^^^^^^^^^^^^^^
+
+.. automodule:: valkyrie_tools.virustotal
    :members:
    :undoc-members:
    :show-inheritance:
