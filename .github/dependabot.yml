@@ -4,22 +4,35 @@ updates:
     directory: "/"
     schedule:
       interval: weekly
+    commit-message:
+      prefix: "bump(ci)"
+
   - package-ecosystem: pip
     directory: "/.github/workflows"
     schedule:
       interval: weekly
+    versioning-strategy: increase-if-necessary
+    open-pull-requests-limit: 5
+    commit-message:
+      prefix: "bump(ci)"
+
   - package-ecosystem: pip
     directory: "/docs"
     schedule:
       interval: weekly
+    versioning-strategy: increase-if-necessary
+    open-pull-requests-limit: 5
+    commit-message:
+      prefix: "bump(docs)"
+
   - package-ecosystem: pip
     directory: "/"
     schedule:
       interval: weekly
     allow:
       - dependency-type: "all"
-    versioning-strategy: lockfile-only
-    open-pull-requests-limit: 15
+    versioning-strategy: increase-if-necessary
+    open-pull-requests-limit: 5
     commit-message:
-      prefix: "⬆️"
-      prefix-development: "⬆️ [dev]"
+      prefix: "bump"
+      prefix-development: "bump(dev)"
