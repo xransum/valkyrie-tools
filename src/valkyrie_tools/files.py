@@ -13,13 +13,18 @@ __all__ = [
 
 
 def path_exists(path: str) -> bool:
-    """Check if the file is a regular file.
+    """Check if a filesystem path exists.
+
+    Uses :func:`os.path.exists`, which returns ``True`` for regular files,
+    directories, symlinks, and other filesystem objects.  It does **not**
+    distinguish between file types - use :func:`os.path.isfile` if you need
+    to confirm the path is a regular file.
 
     Args:
-        path (str): File path.
+        path (str): Filesystem path to check.
 
     Returns:
-        bool: True if path is a regular file.
+        bool: True if the path exists (regardless of type), False otherwise.
     """
     try:
         return os.path.exists(path)

@@ -16,7 +16,17 @@ from .dns import DEFAULT_RECORD_TYPES, RECORD_TYPES, get_dns_records
 
 
 def print_results(arg: str, results: dict) -> None:
-    """Print the results of the DNS query."""
+    """Print formatted DNS query results to stdout.
+
+    Displays the queried argument as a header line followed by each record
+    type-value pair, aligned by the longest record type name in the result
+    set.
+
+    Args:
+        arg (str): The domain or IP address that was queried.
+        results (dict): An iterable of ``(record_type, value)`` tuples as
+            returned by :func:`~valkyrie_tools.dns.get_dns_records`.
+    """
     click.echo(f"> {arg}".format(arg))
     rtype_len = max([len(rtype) for rtype, _ in results])
     for key, value in results:
@@ -45,7 +55,23 @@ def cli(
     interactive: bool,
     record_types: List[str],
 ) -> None:  # noqa: C901
-    """Check whois on domains and ip addresses."""
+    """Check DNS records for domains and IP addresses.
+
+    Accepts one or more domains or IP addresses as positional arguments (or via
+    stdin / interactive mode) and prints all matching DNS records for each
+    requested record type.
+
+    Args:
+        ctx (click.Context): Click context object (injected by
+            :func:`click.pass_context`).
+        values (Tuple[str, ...]): Positional domain or IP address arguments
+            provided on the command line.
+        interactive (bool): When ``True``, reads values from stdin in
+            interactive mode.
+        record_types (List[str]): DNS record types to query (e.g. ``"A"``,
+            ``"MX"``).  Defaults to
+            :data:`~valkyrie_tools.dns.DEFAULT_RECORD_TYPES`.
+    """
     args = parse_input_methods(values, interactive, ctx)
 
     if len(args) == 0:

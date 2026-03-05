@@ -1,4 +1,9 @@
-"""Command-line interface."""
+"""Command-line interface for Valkyrie Tools.
+
+Entry point for the ``valkyrie`` command group, which exposes a ``config``
+sub-group with ``set``, ``get``, ``delete``, and ``list`` sub-commands for
+managing the user's persistent configuration file.
+"""
 
 from typing import Optional
 
@@ -19,7 +24,18 @@ from . import __version__, configs
 )
 @click.version_option(version=__version__, prog_name="valkyrie")
 def cli() -> None:
-    """Valkyrie command."""
+    """Valkyrie Toolkit command group.
+
+    Top-level entry point.  Use ``valkyrie config`` to manage the persistent
+    configuration file (stored in the platform user-config directory).
+
+    Sub-commands:
+
+    * ``config set <key> <value>`` - write a configuration key
+    * ``config get <key>`` - read a configuration key
+    * ``config delete <key>`` - remove a configuration key
+    * ``config list [key]`` - list all keys (or filter by name)
+    """
     pass  # pragma: no cover
 
 

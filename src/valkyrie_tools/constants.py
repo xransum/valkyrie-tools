@@ -1,4 +1,10 @@
-"""Constants modules."""
+"""Constants module.
+
+Defines package-wide string constants (user-facing messages, prompts, error
+text), the :data:`DEFAULT_CATEGORIZED_HEADERS` mapping of known CDN/proxy HTTP
+headers, and pre-compiled :mod:`re` patterns for extracting domains, IP
+addresses, e-mail addresses, and URLs from arbitrary text.
+"""
 
 import re
 
@@ -35,10 +41,7 @@ BINARY_FILE_READ_ERROR = "Cannot read binary files"
 
 # Prompts
 YES_NO_PROMPT = "%s [y/N]: "
-INTERACTIVE_MODE_PROMPT = (
-    "Enter/paste your text and Ctrl-D (Cmd-D on Mac or Ctrl-Z on Windows) to "
-    "save it."
-)
+INTERACTIVE_MODE_PROMPT = "Enter/paste your text and Ctrl-D (Cmd-D on Mac or Ctrl-Z on Windows) to save it."  # noqa: B950
 EMPTY_ARGS_NOT_ALLOWED = "Input args cannot be empty."
 
 # Http default headers
@@ -140,14 +143,30 @@ DEFAULT_CATEGORIZED_HEADERS = {
         ]
     },
 }
+"""Mapping of CDN/proxy vendors to their known HTTP header names.
+
+Structure: ``{vendor: {service: [header_name, ...]}}``
+
+Used by :mod:`~valkyrie_tools.urlcheck` to filter response headers down to
+those that are diagnostic for identifying the CDN or reverse-proxy in front of
+a given URL.  Vendors included: AWS (CloudFront, API Gateway, ELB, S3),
+Fastly, Cloudflare, and Akamai.
+"""
 DEFAULT_REQUEST_TIMEOUT = 15
+"""Default timeout in seconds for outgoing HTTP requests."""
 
 # Regex Patterns
 DOMAIN_REGEX_TEXT = (
     r"(?P<domain>(?:(?P<subdomain>[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?\.)+"
     r"(?P<root>[a-zA-Z]{2,63})))"
 )
+"""Raw regex text for matching domain names.
+
+Named groups: ``domain`` (full match), ``subdomain`` (dot-separated prefix),
+``root`` (TLD/second-level label).  Compiled with ``re.I | re.M``.
+"""
 DOMAIN_REGEX = re.compile(DOMAIN_REGEX_TEXT, re.I | re.M)
+"""Compiled pattern for :data:`DOMAIN_REGEX_TEXT`."""
 
 IPV6_REGEX_TEXT = (
     r"(?P<ipv6>"
@@ -164,7 +183,13 @@ IPV6_REGEX_TEXT = (
     r"|:[0-9a-fA-F]{1,4}:"  # IPv6 with a double colon in the middle
     r")"
 )
+"""Raw regex text for matching IPv6 addresses.
+
+Named group: ``ipv6``.  Handles standard, compressed (``::``), and partially
+abbreviated forms.  Compiled with ``re.I | re.M``.
+"""
 IPV6_REGEX = re.compile(IPV6_REGEX_TEXT, re.I | re.M)
+"""Compiled pattern for :data:`IPV6_REGEX_TEXT`."""
 
 IPV4_REGEX_TEXT = (
     r"(?P<ipv4>"
@@ -172,14 +197,27 @@ IPV4_REGEX_TEXT = (
     r"[01]?[0-9][0-9]?)){3}"
     r")"
 )
+"""Raw regex text for matching IPv4 addresses.
+
+Named group: ``ipv4``.  Validates each octet in the range ``0``-``255``.
+Compiled with ``re.I | re.M``.
+"""
 IPV4_REGEX = re.compile(IPV4_REGEX_TEXT, re.I | re.M)
+"""Compiled pattern for :data:`IPV4_REGEX_TEXT`."""
 
 EMAIL_ADDR_REGEX_TEXT = (
     r"(?P<email>(?P<alias>[a-zA-Z0-9._-]+)\+?(?P<user>[a-zA-Z0-9._-]+)@"
     + DOMAIN_REGEX.pattern
     + r")"
 )
+"""Raw regex text for matching e-mail addresses.
+
+Named groups: ``email`` (full address), ``alias`` (local-part before ``+``),
+``user`` (local-part after ``+``, if present), plus all groups from
+:data:`DOMAIN_REGEX_TEXT`.  Compiled with ``re.I | re.M``.
+"""
 EMAIL_ADDR_REGEX = re.compile(EMAIL_ADDR_REGEX_TEXT, re.I | re.M)
+"""Compiled pattern for :data:`EMAIL_ADDR_REGEX_TEXT`."""
 
 URL_REGEX_TEXT = (
     r"(?P<url>"
@@ -197,4 +235,12 @@ URL_REGEX_TEXT = (
     r"(?P<uri>[^?#]*)?"  # URI (anything before the query or fragment)
     r")"
 )
+"""Raw regex text for matching URLs.
+
+Named groups: ``url`` (full URL), ``protocol``, ``username``, ``password``,
+``port``, ``uri``, plus all groups from :data:`DOMAIN_REGEX_TEXT`,
+:data:`IPV4_REGEX_TEXT`, and :data:`IPV6_REGEX_TEXT`.  Compiled with
+``re.I | re.M``.
+"""
 URL_REGEX = re.compile(URL_REGEX_TEXT, re.I | re.M)
+"""Compiled pattern for :data:`URL_REGEX_TEXT`."""

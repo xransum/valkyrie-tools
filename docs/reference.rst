@@ -1,8 +1,60 @@
 Reference
 =========
 
+.. contents:: Table of Contents
+   :depth: 2
+   :local:
+   :backlinks: none
+
+
+CLI Reference
+-------------
+
+The following sections document each command-line entry point using the
+``sphinx_click`` extension, which renders the full Click help text (options,
+arguments, and sub-commands) directly from the source.
+
+valkyrie
+^^^^^^^^
+
+.. click:: valkyrie_tools.valkyrie:cli
+   :prog: valkyrie
+   :nested: full
+
+urlcheck
+^^^^^^^^
+
+.. click:: valkyrie_tools.urlcheck:cli
+   :prog: urlcheck
+   :nested: full
+
+ipcheck
+^^^^^^^
+
+.. click:: valkyrie_tools.ipcheck:cli
+   :prog: ipcheck
+   :nested: full
+
+dnscheck
+^^^^^^^^
+
+.. click:: valkyrie_tools.dnscheck:cli
+   :prog: dnscheck
+   :nested: full
+
+whobe
+^^^^^
+
+.. click:: valkyrie_tools.whobe:cli
+   :prog: whobe
+   :nested: full
+
+
+API Reference
+-------------
+
 valkyrie_tools
---------------
+^^^^^^^^^^^^^^
 
 .. automodule:: valkyrie_tools
    :members:
@@ -11,7 +63,7 @@ valkyrie_tools
 
 
 valkyrie_tools.cache
---------------------
+^^^^^^^^^^^^^^^^^^^^
 
 .. automodule:: valkyrie_tools.cache
    :members:
@@ -20,7 +72,7 @@ valkyrie_tools.cache
 
 
 valkyrie_tools.commons
-----------------------
+^^^^^^^^^^^^^^^^^^^^^^
 
 .. automodule:: valkyrie_tools.commons
    :members:
@@ -29,7 +81,7 @@ valkyrie_tools.commons
 
 
 valkyrie_tools.config
----------------------
+^^^^^^^^^^^^^^^^^^^^^
 
 .. automodule:: valkyrie_tools.config
    :members:
@@ -38,7 +90,7 @@ valkyrie_tools.config
 
 
 valkyrie_tools.constants
-------------------------
+^^^^^^^^^^^^^^^^^^^^^^^^
 
 .. automodule:: valkyrie_tools.constants
    :members:
@@ -47,7 +99,7 @@ valkyrie_tools.constants
 
 
 valkyrie_tools.dns
-------------------
+^^^^^^^^^^^^^^^^^^
 
 .. automodule:: valkyrie_tools.dns
    :members:
@@ -56,7 +108,7 @@ valkyrie_tools.dns
 
 
 valkyrie_tools.dnscheck
------------------------
+^^^^^^^^^^^^^^^^^^^^^^^
 
 .. automodule:: valkyrie_tools.dnscheck
    :members:
@@ -65,7 +117,7 @@ valkyrie_tools.dnscheck
 
 
 valkyrie_tools.exceptions
--------------------------
+^^^^^^^^^^^^^^^^^^^^^^^^^
 
 .. automodule:: valkyrie_tools.exceptions
    :members:
@@ -74,7 +126,7 @@ valkyrie_tools.exceptions
 
 
 valkyrie_tools.files
---------------------
+^^^^^^^^^^^^^^^^^^^^
 
 .. automodule:: valkyrie_tools.files
    :members:
@@ -83,7 +135,7 @@ valkyrie_tools.files
 
 
 valkyrie_tools.httpr
---------------------
+^^^^^^^^^^^^^^^^^^^^
 
 .. automodule:: valkyrie_tools.httpr
    :members:
@@ -92,7 +144,7 @@ valkyrie_tools.httpr
 
 
 valkyrie_tools.ipaddr
----------------------
+^^^^^^^^^^^^^^^^^^^^^
 
 .. automodule:: valkyrie_tools.ipaddr
    :members:
@@ -101,7 +153,7 @@ valkyrie_tools.ipaddr
 
 
 valkyrie_tools.ipcheck
-----------------------
+^^^^^^^^^^^^^^^^^^^^^^
 
 .. automodule:: valkyrie_tools.ipcheck
    :members:
@@ -110,7 +162,7 @@ valkyrie_tools.ipcheck
 
 
 valkyrie_tools.logger
----------------------
+^^^^^^^^^^^^^^^^^^^^^
 
 .. automodule:: valkyrie_tools.logger
    :members:
@@ -119,7 +171,7 @@ valkyrie_tools.logger
 
 
 valkyrie_tools.urlcheck
------------------------
+^^^^^^^^^^^^^^^^^^^^^^^
 
 .. automodule:: valkyrie_tools.urlcheck
    :members:
@@ -127,8 +179,8 @@ valkyrie_tools.urlcheck
    :show-inheritance:
 
 
-valkyrie_tools.valkyrie
------------------------
+valkyrie_tools.valkyrie (module)
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 .. automodule:: valkyrie_tools.valkyrie
    :members:
@@ -137,7 +189,7 @@ valkyrie_tools.valkyrie
 
 
 valkyrie_tools.whobe
---------------------
+^^^^^^^^^^^^^^^^^^^^
 
 .. automodule:: valkyrie_tools.whobe
    :members:
@@ -146,7 +198,7 @@ valkyrie_tools.whobe
 
 
 valkyrie_tools.whois
---------------------
+^^^^^^^^^^^^^^^^^^^^
 
 .. automodule:: valkyrie_tools.whois
    :members:

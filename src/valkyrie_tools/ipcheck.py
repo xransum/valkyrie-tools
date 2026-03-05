@@ -1,4 +1,9 @@
-"""Command-line script for checking ip address info."""
+"""Command-line script for checking IP address information.
+
+Queries ipinfo.io for geolocation and ASN metadata for one or more public IPv4
+or IPv6 addresses.  Private addresses are detected locally and skipped without
+making a network request.
+"""
 
 import sys
 from typing import Tuple
@@ -11,6 +16,9 @@ from .ipaddr import get_ip_info, is_private_ip
 
 
 PRIVATE_IP_SKIP_MESSAGE = "Skipped, private ip address."
+"""Message printed when an IP address falls within
+:data:`~valkyrie_tools.ipaddr.PRIVATE_IP_CIDR_RANGES`.
+"""
 
 
 @common_options(
@@ -25,7 +33,24 @@ def cli(
     values: Tuple[str, ...],
     interactive: bool,
 ) -> None:
-    """Get ip address info."""
+    """Look up geolocation and ASN metadata for IP addresses.
+
+    Accepts one or more IPv4 or IPv6 addresses as positional arguments (or via
+    stdin / interactive mode).  For each address:
+
+    * Private addresses (per :data:`~valkyrie_tools.ipaddr.PRIVATE_IP_CIDR_RANGES`)
+      are skipped with a notice.
+    * Public addresses are queried against the ipinfo.io JSON API and the
+      returned key/value pairs are printed in aligned columns.
+
+    Args:
+        ctx (click.Context): Click context object (injected by
+            :func:`click.pass_context`).
+        values (Tuple[str, ...]): Positional IP address arguments provided
+            on the command line.
+        interactive (bool): When ``True``, reads IP addresses from stdin
+            in interactive mode.
+    """
     values = parse_input_methods(values, interactive, ctx)
     if len(values) == 0:
         click.echo("Error: %s" % NO_ARGS_TEXT, err=True)
