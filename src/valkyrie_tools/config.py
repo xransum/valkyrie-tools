@@ -1,4 +1,11 @@
-"""Config module."""
+"""Configuration management for valkyrie-tools.
+
+Wraps :class:`configparser.ConfigParser` with a thin :class:`Config` class
+that automatically locates the per-user configuration file (using
+``appdirs.user_config_dir``), creates the file with sensible defaults on first
+run, and exposes a simple ``get`` / ``set`` / ``remove`` API.  The file is
+stored in INI format.
+"""
 
 import configparser
 import os
@@ -38,11 +45,25 @@ class Config:
             self.set_defaults()
 
     def read(self):
-        """Load the configuration file."""
+        """Load the configuration file from disk.
+
+        Reads :attr:`config_file` via :class:`configparser.ConfigParser`.
+        If the file does not exist, ``configparser`` silently skips it and
+        returns an empty list.
+
+        Returns:
+            List[str]: Paths of files successfully read (an empty list when
+            the file does not exist yet).
+        """
         return self.config.read(self.config_file)
 
     def save(self):
-        """Save the configuration file."""
+        """Write the current in-memory configuration to disk.
+
+        Serialises :attr:`config` to :attr:`config_file` using
+        :class:`configparser.ConfigParser`.  The file is created if it does
+        not exist; intermediate directories must already exist.
+        """
         with open(self.config_file, "w") as f:
             self.config.write(f)
 
@@ -94,7 +115,14 @@ class Config:
         self.save()
 
     def set_defaults(self):
-        """Set default values for the configuration."""
+        """Apply :attr:`defaults` to the in-memory configuration and save.
+
+        Iterates over all ``section -> {option: value}`` pairs in
+        :attr:`defaults`, creates any missing sections, sets each option,
+        then calls :meth:`save` once to persist the full configuration.
+        Called automatically by :meth:`__init__` when ``defaults`` is
+        provided and no configuration file was found on disk.
+        """
         for section, options in self.defaults.items():
             for option, value in options.items():
                 if not self.config.has_section(section):
