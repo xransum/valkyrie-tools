@@ -7,14 +7,16 @@ and a family of regex-based extraction functions for domains, IP addresses,
 e-mail addresses, and URLs.
 """
 
+from __future__ import annotations
+
 import os
 import re
 import sys
 from functools import wraps
-from typing import List, Optional, Tuple, Union
+from typing import Any, Callable, List, Optional, Tuple, Union  # noqa: F401
 
 import click
-from art import text2art
+from art import text2art  # type: ignore[import-untyped]  # no stubs available
 
 from .constants import (
     DOMAIN_REGEX,
@@ -41,11 +43,11 @@ __all__ = [
 
 
 def common_options(
-    cmd_type: Union[click.Command, click.Group] = click.Command,
+    cmd_type: Callable[..., Callable[[Any], Any]] = click.command,
     name: str = "",
     description: str = "",
     version: str = "",
-) -> Union[click.Command, click.Group]:
+) -> Callable[[Any], Any]:
     """Decorator to add common options to command-line tools.
 
     Allows for built-in command definitions and the flags:
@@ -55,18 +57,18 @@ def common_options(
     -i, --interactive: Enable interactive mode.
 
     Args:
-        cmd_type (Union[click.Command, click.Group]): Click command type.
+        cmd_type (Callable): Click command decorator factory (e.g. click.command).
         name (str): Name of the command.
         description (str): Description of the command.
         version (str): Version of the command in semantic versioning scheme.
 
     Returns:
-        Union[click.Command, click.Group]: Click command function.
+        Callable: Decorator that wraps the command function.
     """
 
     def decorator(
-        func: Union[click.Command, click.Group],
-    ) -> Union[click.Command, click.Group]:
+        func: Any,
+    ) -> Any:
         """Bind options to the command function."""
 
         @cmd_type(
@@ -112,7 +114,7 @@ def common_options(
             "values", nargs=-1, type=click.UNPROCESSED, required=False
         )
         @wraps(func)
-        def wrapper(*args: List[str], **kwargs: List[str]) -> None:
+        def wrapper(*args: Any, **kwargs: Any) -> Any:
             """Ensure decorated function's metadata is preserved."""
             return func(*args, **kwargs)
 
@@ -121,7 +123,7 @@ def common_options(
     return decorator
 
 
-def print_version(version: str) -> click.core.Command:
+def print_version(version: str) -> Callable[..., None]:
     """Print version and exit.
 
     Args:
@@ -133,7 +135,7 @@ def print_version(version: str) -> click.core.Command:
 
     def echo_version(
         ctx: click.Context,
-        param: Union[click.Option, click.Parameter],  # noqa: B008
+        param: click.Option | click.Parameter,  # noqa: B008
         value: str,
     ) -> None:
         """Print version and exit.
@@ -155,7 +157,7 @@ def print_version(version: str) -> click.core.Command:
 
 def handle_file_input(
     file_path: str,
-) -> Optional[str]:
+) -> str | None:
     """Read a text file from the filesystem and return its contents.
 
     Performs safety checks before reading: binary files and directories are
@@ -193,10 +195,10 @@ def handle_file_input(
 
 
 def parse_input_methods(
-    values: Tuple[str, ...],
+    values: tuple[str, ...],
     interactive: bool,
     ctx: click.Context,
-) -> Tuple[str, ...]:
+) -> tuple[str, ...]:
     """Parse input methods.
 
     This function will attempt to read from stdin if
@@ -215,7 +217,7 @@ def parse_input_methods(
     Returns:
         Tuple[str, ...]: Tuple of arguments.
     """
-    args = ()
+    args: tuple[str, ...] = ()
 
     # When interactive is enabled, drop to an input
     # stream.
@@ -248,11 +250,11 @@ def parse_input_methods(
         # Avoid empty strings since Path.exists return True
         # for them.
         if os.path.exists(arg) is True:
-            arg = handle_file_input(arg)
-            if arg is None:  # pragma: no cover
+            file_content = handle_file_input(arg)
+            if file_content is None:  # pragma: no cover
                 continue
 
-            args += (arg,)
+            args += (file_content,)
 
         # Otherwise, tack on the arg to the tuple.
         else:
@@ -265,8 +267,8 @@ def parse_input_methods(
 
 # Regex extract functions
 def _extract_regex(
-    regex: re.Pattern, text: str, key: Optional[str], unique: bool = False
-) -> List[str]:
+    regex: re.Pattern[str], text: str, key: str | None, unique: bool = False
+) -> list[str]:
     """Extract regex matches from text.
 
     Args:
@@ -291,12 +293,12 @@ def _extract_regex(
     return matches
 
 
-def extract_domains(text: str, unique=False) -> List[str]:
+def extract_domains(text: str, unique: bool = False) -> list[str]:
     """Extract domains from text.
 
     Args:
         text (str): Text to extract domains from.
-        unique (bool, optional): Whether to return unique domains only.
+        unique (bool): Whether to return unique domains only.
             Defaults to False.
 
     Returns:
@@ -305,12 +307,12 @@ def extract_domains(text: str, unique=False) -> List[str]:
     return _extract_regex(DOMAIN_REGEX, text, "domain", unique)
 
 
-def extract_ipv4_addrs(text: str, unique=False) -> List[str]:
+def extract_ipv4_addrs(text: str, unique: bool = False) -> list[str]:
     """Extract IPv4 addresses from text.
 
     Args:
         text (str): Text to extract IPv4 addresses from.
-        unique (bool, optional): Whether to return unique IPv4 addresses only.
+        unique (bool): Whether to return unique IPv4 addresses only.
             Defaults to False.
 
     Returns:
@@ -319,12 +321,12 @@ def extract_ipv4_addrs(text: str, unique=False) -> List[str]:
     return _extract_regex(IPV4_REGEX, text, "ipv4", unique)
 
 
-def extract_ipv6_addrs(text: str, unique=False) -> List[str]:
+def extract_ipv6_addrs(text: str, unique: bool = False) -> list[str]:
     """Extract IPv6 addresses from text.
 
     Args:
         text (str): Text to extract IPv6 addresses from.
-        unique (bool, optional): Whether to return unique IPv6 addresses only.
+        unique (bool): Whether to return unique IPv6 addresses only.
             Defaults to False.
 
     Returns:
@@ -333,12 +335,12 @@ def extract_ipv6_addrs(text: str, unique=False) -> List[str]:
     return _extract_regex(IPV6_REGEX, text, "ipv6", unique)
 
 
-def extract_ip_addrs(text: str, unique=False) -> List[str]:
+def extract_ip_addrs(text: str, unique: bool = False) -> list[str]:
     """Extract IPv4 and IPv6 addresses from text.
 
     Args:
         text (str): Text to extract IPv4 and IPv6 addresses from.
-        unique (bool, optional): Whether to return unique IPv4 and IPv6
+        unique (bool): Whether to return unique IPv4 and IPv6
             addresses only. Defaults to False.
 
     Returns:
@@ -347,12 +349,12 @@ def extract_ip_addrs(text: str, unique=False) -> List[str]:
     return extract_ipv4_addrs(text, unique) + extract_ipv6_addrs(text, unique)
 
 
-def extract_emails(text: str, unique=False) -> List[str]:
+def extract_emails(text: str, unique: bool = False) -> list[str]:
     """Extract email addresses from text.
 
     Args:
         text (str): Text to extract email addresses from.
-        unique (bool, optional): Whether to return unique email addresses only.
+        unique (bool): Whether to return unique email addresses only.
             Defaults to False.
 
     Returns:
@@ -361,12 +363,12 @@ def extract_emails(text: str, unique=False) -> List[str]:
     return _extract_regex(EMAIL_ADDR_REGEX, text, "email", unique)
 
 
-def extract_urls(text: str, unique=False) -> List[str]:
+def extract_urls(text: str, unique: bool = False) -> list[str]:
     """Extract URLs from text.
 
     Args:
         text (str): Text to extract URLs from.
-        unique (bool, optional): Whether to return unique URLs only. Defaults to False.
+        unique (bool): Whether to return unique URLs only. Defaults to False.
 
     Returns:
         List[str]: List of URLs.

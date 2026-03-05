@@ -1,7 +1,7 @@
 """Test suite for ipcheck command."""
 
 import unittest
-from unittest.mock import patch
+from unittest.mock import MagicMock, patch
 
 from valkyrie_tools.ipcheck import PRIVATE_IP_SKIP_MESSAGE, cli
 
@@ -13,19 +13,19 @@ class TestIpcheck(BaseCommandTest, unittest.TestCase):
 
     command = cli
 
-    def setUp(self):
+    def setUp(self) -> None:
         """Set up test fixtures, if any."""
         # Call the setUp of the base class
         super().setUp()
         pass
 
-    def tearDown(self):
+    def tearDown(self) -> None:
         """Tear down test fixtures, if any."""
         # Call the tearDown of the base class
         super().tearDown()
         pass
 
-    def test_successful(self):
+    def test_successful(self) -> None:
         """Test for success."""
         # Mock the arguments
         mock_ip = "1.1.1.1"
@@ -34,7 +34,7 @@ class TestIpcheck(BaseCommandTest, unittest.TestCase):
         # Assert the result
         self.assertIn(mock_ip, result.output)
 
-    def test_private_ip_error(self):
+    def test_private_ip_error(self) -> None:
         """Test for private ip."""
         # Mock the arguments
         mock_ip = "192.168.1.1"
@@ -44,7 +44,7 @@ class TestIpcheck(BaseCommandTest, unittest.TestCase):
         self.assertIn(PRIVATE_IP_SKIP_MESSAGE, result.output)
 
     @patch("valkyrie_tools.ipcheck.get_ip_info")
-    def test_multiple_ip(self, mock_get_ip_info):
+    def test_multiple_ip(self, mock_get_ip_info: MagicMock) -> None:
         """Test for multiple ip addresses."""
         # Mock the responses
         mock_result = {
@@ -61,3 +61,12 @@ class TestIpcheck(BaseCommandTest, unittest.TestCase):
             for key, value in mock_result[ip].items():
                 self.assertIn(key, result.output)
                 self.assertIn(value, result.output)
+
+    @patch("valkyrie_tools.ipcheck.get_ip_info")
+    def test_get_ip_info_returns_none(
+        self, mock_get_ip_info: MagicMock
+    ) -> None:
+        """Test that a None result from get_ip_info is skipped silently."""
+        mock_get_ip_info.return_value = None
+        result = self.runner.invoke(self.command, ["1.2.3.4"])
+        self.assertEqual(result.exit_code, 0)

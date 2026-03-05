@@ -5,7 +5,7 @@ import sys
 import tempfile
 import unittest
 from glob import glob
-from typing import List
+from typing import Iterator
 from unittest.mock import Mock, patch
 
 from click.testing import CliRunner
@@ -46,7 +46,7 @@ class TestPathExistsFunction(unittest.TestCase):
 
     def test_exception_path_exists(self) -> None:
         """Test path_exists function with invalid argument."""
-        self.assertFalse(path_exists({"foo": "bar"}))
+        self.assertFalse(path_exists({"foo": "bar"}))  # type: ignore[arg-type]
 
 
 class TestReadFileFunction(unittest.TestCase):
@@ -69,7 +69,9 @@ class TestReadFileFunction(unittest.TestCase):
 
     def test_read_file(self) -> None:
         """Test path_exists function with valid file."""
-        self.assertIn("Hello World!", read_file(self.tmp_file.name))
+        result = read_file(self.tmp_file.name)
+        assert result is not None
+        self.assertIn("Hello World!", result)
 
     def test_read_non_exists_file(self) -> None:
         """Test path_exists with invalid file."""
@@ -182,7 +184,7 @@ class TestFileDescriptorFunction(unittest.TestCase):
         os.unlink(self.tmp_file.name)
 
     @staticmethod
-    def _get_file_descriptors() -> List[str]:
+    def _get_file_descriptors() -> Iterator[str]:
         """Get file descriptors."""
         # Get the filepath for the systems stdout file descriptor
         # this would be /dev/fd/1 on Linux and /proc/self/fd/1 on
@@ -206,7 +208,7 @@ class TestFileDescriptorFunction(unittest.TestCase):
                 fd.write("Hello World!")
 
             if sys.platform == "win32":
-                self.assertEqual(is_file_descriptor(file_path), None)
+                self.assertFalse(is_file_descriptor(file_path))
 
             else:
                 self.assertTrue(is_file_descriptor(file_path))
@@ -225,11 +227,11 @@ class TestFileDescriptorFunction(unittest.TestCase):
 
     def test_obj_file_descriptor_path(self) -> None:
         """Test is_file_descriptor function."""
-        self.assertFalse(is_file_descriptor({"foo": "bar"}))
+        self.assertFalse(is_file_descriptor({"foo": "bar"}))  # type: ignore[arg-type]
 
     @patch("valkyrie_tools.files.isinstance")
     def test_path_str_exception(self, mock_isinstance: Mock) -> None:
         """Test path_exists function with invalid argument."""
         mock_isinstance.side_effect = [False, True]
-        self.assertFalse(is_file_descriptor(None))
+        self.assertFalse(is_file_descriptor(None))  # type: ignore[arg-type]
         mock_isinstance.assert_called()

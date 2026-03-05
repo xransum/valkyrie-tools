@@ -79,7 +79,6 @@ def is_file_descriptor(path: Union[str, int]) -> bool:
                 return True
         except Exception:
             return False
-    else:  # pragma: no cover
         return False
 
 

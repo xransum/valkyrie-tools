@@ -68,6 +68,9 @@ def cli(
 
         ipinfo = get_ip_info(ipaddr)
 
+        if ipinfo is None:
+            continue
+
         key_width = max([len(k) for k in ipinfo.keys()]) + 1
 
         for k, v in ipinfo.items():

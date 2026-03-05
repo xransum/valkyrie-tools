@@ -2,9 +2,9 @@
 
 import os
 import unittest
-from unittest.mock import patch
+from unittest.mock import MagicMock, patch
 
-from appdirs import user_config_dir
+from appdirs import user_config_dir  # type: ignore[import-untyped]
 from click.testing import CliRunner
 
 from valkyrie_tools import __appname__
@@ -31,9 +31,9 @@ class TestValkyrie(unittest.TestCase):
             test_config_file, defaults=test_config_defaults
         )
 
-    def tearDown(self) -> CliRunner:
+    def tearDown(self) -> None:
         """Tear down test fixtures, if any."""
-        self.runner = None
+        self.runner = CliRunner()  # reset to a fresh runner
         if os.path.exists(test_config_file_path):
             # os.remove(test_config_file_path)
             pass
@@ -60,55 +60,66 @@ class TestValkyrie(unittest.TestCase):
     #     self.assertEqual(result.exit_code, 0)
 
     @patch("valkyrie_tools.valkyrie.configs")
-    def test_config_set(self, mock_configs) -> None:
+    def test_config_set(self, mock_configs: MagicMock) -> None:
         """Test set sub-command."""
         # Replace what is bound to the configs variable with our test config
         mock_configs.return_value = self.test_config
 
         result = self.runner.invoke(
-            cli.commands["config"].commands["set"], ["setKey", "setValue"]
+            cli.commands["config"].commands["set"],  # type: ignore[attr-defined]
+            ["setKey", "setValue"],
         )
         self.assertEqual(result.exit_code, 0)
         self.assertIn("Updated setKey.", result.output)
 
     @patch("valkyrie_tools.valkyrie.configs")
-    def test_config_get(self, mock_configs) -> None:
+    def test_config_get(self, mock_configs: MagicMock) -> None:
         """Test get sub-command."""
         mock_configs.return_value = self.test_config
         mock_configs.get.return_value = "testValue"
         result = self.runner.invoke(
-            cli.commands["config"].commands["get"], ["testKey"]
+            cli.commands["config"].commands["get"],  # type: ignore[attr-defined]
+            ["testKey"],
         )
         self.assertEqual(result.exit_code, 0)
         self.assertIn("testKey: testValue", result.output)
 
     @patch("valkyrie_tools.valkyrie.configs")
-    def test_config_delete(self, mock_configs) -> None:
+    def test_config_delete(self, mock_configs: MagicMock) -> None:
         """Test delete sub-command."""
         mock_configs.return_value = self.test_config
 
         result = self.runner.invoke(
-            cli.commands["config"].commands["delete"], ["testKey"]
+            cli.commands["config"].commands["delete"],  # type: ignore[attr-defined]
+            ["testKey"],
         )
         self.assertEqual(result.exit_code, 0)
         self.assertIn("Deleted testKey.", result.output)
 
     @patch("valkyrie_tools.valkyrie.configs")
     @patch("click.echo")
-    def test_config_list(self, mock_click_echo, mock_configs) -> None:
+    def test_config_list(
+        self, mock_click_echo: MagicMock, mock_configs: MagicMock
+    ) -> None:
         """Test list sub-command."""
         mock_configs.return_value = self.test_config
-        result = self.runner.invoke(cli.commands["config"].commands["list"], [])
+        result = self.runner.invoke(
+            cli.commands["config"].commands["list"],  # type: ignore[attr-defined]
+            [],
+        )
         self.assertEqual(result.exit_code, 0)
         # mock_click_echo.assert_called()
 
     @patch("valkyrie_tools.valkyrie.configs")
     @patch("click.echo")
-    def test_config_list_value(self, mock_click_echo, mock_configs) -> None:
+    def test_config_list_value(
+        self, mock_click_echo: MagicMock, mock_configs: MagicMock
+    ) -> None:
         """Test list sub-command."""
         mock_configs.return_value = self.test_config
         result = self.runner.invoke(
-            cli.commands["config"].commands["list"], ["testKey"]
+            cli.commands["config"].commands["list"],  # type: ignore[attr-defined]
+            ["testKey"],
         )
         self.assertEqual(result.exit_code, 0)
         # mock_click_echo.assert_called()
@@ -116,12 +127,13 @@ class TestValkyrie(unittest.TestCase):
     @patch("valkyrie_tools.valkyrie.configs")
     @patch("click.echo")
     def test_config_list_value_uppercase(
-        self, mock_click_echo, mock_configs
+        self, mock_click_echo: MagicMock, mock_configs: MagicMock
     ) -> None:
         """Test list sub-command."""
         mock_configs.return_value = self.test_config
         result = self.runner.invoke(
-            cli.commands["config"].commands["list"], ["TESTKEY"]
+            cli.commands["config"].commands["list"],  # type: ignore[attr-defined]
+            ["TESTKEY"],
         )
         self.assertEqual(result.exit_code, 0)
         # mock_click_echo.assert_called()

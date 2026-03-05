@@ -24,7 +24,7 @@ nox.needs_version = ">= 2021.6.6"
 nox.options.sessions = (
     "pre-commit",
     "safety",
-    # "mypy",
+    "mypy",
     "tests",
     "xdoctest",
     "docs-build",
@@ -166,7 +166,14 @@ def mypy(session: Session) -> None:
         "tests",
         "docs/conf.py",
     ]
-    session.install(".", "mypy", "pytest", "importlib-metadata")
+    session.install(
+        ".",
+        "mypy",
+        "pytest",
+        "importlib-metadata",
+        "types-requests",
+        "types-beautifulsoup4",
+    )
     session.run("mypy", *args)
     if not session.posargs and session.python == python_versions[0]:
         session.run(

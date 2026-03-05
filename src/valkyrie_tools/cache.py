@@ -15,10 +15,13 @@ individual modules do not need to instantiate :class:`Cache` themselves.
 from functools import lru_cache, update_wrapper
 from math import floor
 from time import time
-from typing import Any, Callable
+from typing import Any, Callable, Dict, Generator, Tuple, TypeVar
 
 
-def _ttl_hash_gen(seconds: int) -> int:
+_F = TypeVar("_F", bound=Callable[..., Any])
+
+
+def _ttl_hash_gen(seconds: int) -> Generator[int, None, None]:
     """Generates a hash value based on the elapsed time.
 
     Since the start of the generator, divided by the specified number of seconds.
@@ -38,17 +41,17 @@ class Cache:
     """A decorator class for caching function results."""
 
     @staticmethod
-    def memoize(fn: Callable) -> Callable:
+    def memoize(fn: _F) -> _F:
         """Decorator for caching function results.
 
         Memoize decorator that caches the return value of a function
         based on its arguments.
 
         Args:
-            fn (Callable): The function to be memoized.
+            fn (_F): The function to be memoized.
 
         Returns:
-            Callable: The memoized function.
+            _F: The memoized function.
 
         Example:
             >>> from valkyrie_tools.cache import Cache
@@ -65,7 +68,7 @@ class Cache:
             >>> call_count[0]  # only called once
             1
         """
-        memo = {}
+        memo: Dict[Tuple[Any, ...], Any] = {}
 
         def wrapper(*args: Any) -> Any:
             """A wrapper that caches the result of the function."""
@@ -76,12 +79,12 @@ class Cache:
                 memo[args] = rv
                 return rv
 
-        return wrapper
+        return wrapper  # type: ignore[return-value]  # wrapper erases _F bound
 
     @staticmethod
     def ttl_cache(
         maxsize: int = 128, typed: bool = False, ttl: int = -1
-    ) -> Callable:
+    ) -> Callable[[_F], _F]:
         """Decorator that adds TTL caching functionality to a function.
 
         Wraps :func:`functools.lru_cache` with a time-based hash so that
@@ -119,22 +122,22 @@ class Cache:
 
         hash_gen = _ttl_hash_gen(ttl)
 
-        def wrapper(func: Callable) -> Callable:
+        def wrapper(func: _F) -> _F:
             """A decorator that adds caching functionality to a function.
 
             Args:
-                func (Callable): The function to be decorated.
+                func (_F): The function to be decorated.
 
             Returns:
-                Callable: The decorated function.
+                _F: The decorated function.
             """
 
             @lru_cache(maxsize, typed)
-            def ttl_func(ttl_hash: str, *args, **kwargs) -> Any:
+            def ttl_func(ttl_hash: int, *args: Any, **kwargs: Any) -> Any:
                 """Caches the result of 'func' function based on the arguments.
 
                 Args:
-                    ttl_hash (str): Hash used to identify the cached result.
+                    ttl_hash (int): Hash used to identify the cached result.
                     *args: Positional arguments passed to the 'func' function.
                     **kwargs: Keyword arguments passed to the 'func' function.
 
@@ -143,7 +146,7 @@ class Cache:
                 """
                 return func(*args, **kwargs)
 
-            def wrapped(*args, **kwargs) -> Any:
+            def wrapped(*args: Any, **kwargs: Any) -> Any:
                 """A wrapper that generates a hash value and calls the ttl_func.
 
                 This function is a wrapper that generates a hash value and
@@ -160,13 +163,13 @@ class Cache:
                 th = next(hash_gen)
                 return ttl_func(th, *args, **kwargs)
 
-            def clear_cache() -> Any:
+            def clear_cache() -> None:
                 """Clears the cache used by the ttl_func."""
                 ttl_func.cache_clear()
 
-            wrapped.clear_cache = clear_cache
+            wrapped.clear_cache = clear_cache  # type: ignore[attr-defined]  # noqa: B950
 
-            return update_wrapper(wrapped, func)
+            return update_wrapper(wrapped, func)  # type: ignore[return-value]  # noqa: B950
 
         return wrapper
 

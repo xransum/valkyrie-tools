@@ -15,7 +15,7 @@ from .constants import HELP_SHORT_TEXT, NO_ARGS_TEXT
 from .dns import DEFAULT_RECORD_TYPES, RECORD_TYPES, get_dns_records
 
 
-def print_results(arg: str, results: dict) -> None:
+def print_results(arg: str, results: List[Tuple[str, str]]) -> None:
     """Print formatted DNS query results to stdout.
 
     Displays the queried argument as a header line followed by each record
@@ -81,13 +81,13 @@ def cli(
 
     ip_addrs = extract_ip_addrs("\n".join(values), unique=True)
     domains = extract_domains("\n".join(values), unique=True)
-    args = list(set(ip_addrs + domains))
+    targets = list(set(ip_addrs + domains))  # type: List[str]
 
-    for a in range(len(args)):
-        arg = args[a]
+    for a in range(len(targets)):
+        arg = targets[a]
         results = get_dns_records(arg, record_types=record_types)
         print_results(arg, results)
 
         # Print trailing newline
-        if a < len(args) - 1:  # pragma: no cover
+        if a < len(targets) - 1:  # pragma: no cover
             click.echo()

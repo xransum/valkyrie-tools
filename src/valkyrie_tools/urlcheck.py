@@ -2,10 +2,11 @@
 
 import re
 import sys
-from typing import Tuple
+from typing import Any, Dict, Tuple, Union, cast
 
 import click
 import requests
+from requests import Response
 
 from .commons import common_options, extract_urls, parse_input_methods
 from .constants import (  # URL_REGEX,
@@ -109,7 +110,9 @@ def cli(  # noqa: C901
         results = build_redirect_chain("GET", url, 30, {}, None, True)
 
         for r in range(len(results)):
-            url, response = results[r]
+            hop = results[r]  # type: Any
+            hop_url = cast(str, hop[0])
+            response = cast(Union[Response, Exception, None], hop[1])
 
             padding = 3
             # Print the URL
@@ -120,10 +123,10 @@ def cli(  # noqa: C901
                 click.echo(">>", nl=False)
 
             click.echo(" ", nl=False)
-            click.echo(url, nl=False)
+            click.echo(hop_url, nl=False)
             click.echo()
 
-            if issubclass(type(response), Exception):
+            if isinstance(response, Exception):
                 click.echo(" " * padding, nl=False, err=True)
 
                 if isinstance(response, requests.exceptions.SSLError):
@@ -152,7 +155,7 @@ def cli(  # noqa: C901
                     click.echo(str(response), err=True)
 
                 continue
-            else:
+            elif isinstance(response, Response):
                 # Print the response status
                 http_version = get_http_version_text(response.raw.version)
                 status_code = response.status_code
@@ -172,12 +175,12 @@ def cli(  # noqa: C901
                     click.echo(reason)
 
                 # Print the response headers
-                headers = response.headers
+                resp_headers = cast(Dict[str, str], dict(response.headers))
                 if show_headers is True:
-                    headers = filter_headers(response.headers, [])
+                    resp_headers = filter_headers(resp_headers, [])
                 else:
-                    headers = filter_headers(
-                        response.headers,
+                    resp_headers = filter_headers(
+                        resp_headers,
                         [
                             v
                             for vv in DEFAULT_CATEGORIZED_HEADERS.values()
@@ -185,7 +188,7 @@ def cli(  # noqa: C901
                         ],
                     )
 
-                for key, val in headers.items():
+                for key, val in resp_headers.items():
                     click.echo(" " * padding, nl=False)
                     click.echo(key, nl=False)
                     click.echo(": ", nl=False)

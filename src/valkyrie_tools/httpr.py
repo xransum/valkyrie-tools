@@ -1,19 +1,19 @@
 """Httpr module for handling http requests and responses."""
 
 import re
-import warnings
 from datetime import datetime
-from typing import Any, Dict, List, Optional, Union
+from typing import Any, Dict, List, Optional, Union, cast
 from urllib.parse import urljoin, urlparse, urlunparse  # noqa:F401
 
 import requests
+import urllib3
 from bs4 import BeautifulSoup
+from bs4.element import Tag
 from requests import Response
-from requests.packages.urllib3.exceptions import InsecureRequestWarning
 
 
 # Suppress insecure request warnings
-warnings.simplefilter("ignore", InsecureRequestWarning)
+urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
 
 
 # Constants
@@ -164,8 +164,10 @@ def extract_redirects_from_html_meta(soup: BeautifulSoup) -> Optional[str]:
         Optional[str]: redirect url
     """
     meta_redirect = soup.find("meta", attrs={"http-equiv": "refresh"})
-    if meta_redirect is not None:
-        content = meta_redirect.get("content", "")
+    if meta_redirect is not None and isinstance(meta_redirect, Tag):
+        raw_content = meta_redirect.get("content", "")
+        # .get() on a Tag returns _AttributeValue; cast to str for re operations
+        content = str(raw_content) if raw_content is not None else ""
         if content != "":
             t = re.split(re.compile(r"url=", re.I), content)[1]
             t = re.sub(r'["\']', "", t).strip()
@@ -177,7 +179,7 @@ def extract_redirects_from_html_meta(soup: BeautifulSoup) -> Optional[str]:
 def make_request(
     method: str,
     url: str,
-    **kwargs: Dict[str, Any],
+    **kwargs: Any,
 ) -> List[Union[str, Union[Response, Exception]]]:
     """Make a single HTTP request and return the URL paired with the response.
 
@@ -243,7 +245,7 @@ def build_redirect_chain(
     headers: Optional[Dict[str, str]] = None,
     proxies: Optional[Dict[str, str]] = None,
     follow_meta: bool = True,
-    **kwargs: Dict[str, Any],
+    **kwargs: Any,
 ) -> List[Union[str, List[Union[str, Union[Response, Exception]]]]]:
     """Build the full HTTP redirect chain for a given URL.
 
@@ -276,11 +278,11 @@ def build_redirect_chain(
         on success or an :class:`Exception` on failure.  The list contains
         at least one entry (the initial URL).
     """
-    chains = []
+    chains = []  # type: List[Any]
     current_url = url  # type: Optional[str]
 
     while current_url is not None:
-        chain = [current_url, None]
+        chain = [current_url, None]  # type: List[Any]
         try:
             headers = {
                 **DEFAULT_REQUEST_HEADERS,
@@ -296,13 +298,13 @@ def build_redirect_chain(
                 verify=False,
                 **kwargs,
             )
-            res = chain[1]  # type: Union[Response, Exception]
+            res = cast(Union[Response, Exception], chain[1])
 
             next_url = get_next_url(res)
 
             if next_url is None or next_url == "":
                 if follow_meta is True:  # pragma: no cover
-                    if isinstance(res, Exception) is False:
+                    if not isinstance(res, Exception):
                         content_type = res.headers.get("Content-Type", "")
 
                         if "html" in content_type or "plain" in content_type:
