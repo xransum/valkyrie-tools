@@ -208,7 +208,7 @@ class TestFileDescriptorFunction(unittest.TestCase):
                 fd.write("Hello World!")
 
             if sys.platform == "win32":
-                self.assertEqual(is_file_descriptor(file_path), None)
+                self.assertFalse(is_file_descriptor(file_path))
 
             else:
                 self.assertTrue(is_file_descriptor(file_path))
