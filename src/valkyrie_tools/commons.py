@@ -1,4 +1,11 @@
-"""Package commons for valkyrie-tools."""
+"""Shared utilities for valkyrie-tools CLI commands.
+
+Provides the :func:`common_options` Click decorator (which wires up
+``--interactive`` and a variadic ``values`` argument for every command),
+input-handling helpers (:func:`parse_input_methods`, :func:`handle_file_input`),
+and a family of regex-based extraction functions for domains, IP addresses,
+e-mail addresses, and URLs.
+"""
 
 import os
 import re
@@ -58,7 +65,7 @@ def common_options(
     """
 
     def decorator(
-        func: Union[click.Command, click.Group]
+        func: Union[click.Command, click.Group],
     ) -> Union[click.Command, click.Group]:
         """Bind options to the command function."""
 
@@ -149,7 +156,24 @@ def print_version(version: str) -> click.core.Command:
 def handle_file_input(
     file_path: str,
 ) -> Optional[str]:
-    """Handle file input."""
+    """Read a text file from the filesystem and return its contents.
+
+    Performs safety checks before reading: binary files and directories are
+    rejected with an :class:`OSError`.  Only plain text files (as detected by
+    :func:`~valkyrie_tools.files.is_binary_file`) are read and returned.
+
+    Args:
+        file_path (str): Path to the file to read.
+
+    Returns:
+        Optional[str]: The stripped text content of the file, or ``None`` if
+        the path is not a regular file (e.g. a missing path that somehow
+        passes the directory check).
+
+    Raises:
+        OSError: If ``file_path`` is a binary file.
+        OSError: If ``file_path`` is a directory.
+    """
     value = None
 
     # Safely avoid binary files.

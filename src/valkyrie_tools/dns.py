@@ -36,8 +36,27 @@ DEFAULT_NAMESERVERS = [
     "64.6.64.6",
     "64.6.65.6",  # Verisign
 ]
+"""Ordered list of public DNS resolver IP addresses.
+
+Includes resolvers from Cloudflare (1.1.1.1), Google (8.8.8.8), Quad9
+(9.9.9.9), OpenDNS (208.67.222.222), Comodo Secure, CleanBrowsing, AdGuard,
+and Verisign.  Both primary and secondary addresses are listed for each
+provider.  Used as the default ``nameservers`` argument for
+:func:`get_dns_record` and :func:`get_rdns_record`.
+"""
 DEFAULT_RECORD_TYPES = ["A", "AAAA", "MX", "CNAME", "PTR"]
+"""Default DNS record types queried by :func:`get_dns_records`.
+
+Covers the most common record types: ``A`` (IPv4 address), ``AAAA`` (IPv6
+address), ``MX`` (mail exchange), ``CNAME`` (canonical name), and ``PTR``
+(reverse DNS pointer).
+"""
 RECORD_TYPES = [q.name for q in dns.rdatatype.RdataType]
+"""All record type names supported by :mod:`dnspython`.
+
+Derived at import time from :class:`dns.rdatatype.RdataType`.  Used by
+:func:`is_valid_record_type` to validate caller-supplied record type strings.
+"""
 
 
 def is_valid_record_type(record_type: str) -> bool:
@@ -48,6 +67,13 @@ def is_valid_record_type(record_type: str) -> bool:
 
     Returns:
         bool: True if record_type is a valid record type.
+
+    Example:
+        >>> from valkyrie_tools.dns import is_valid_record_type
+        >>> is_valid_record_type("A")
+        True
+        >>> is_valid_record_type("NOTARECORD")
+        False
     """
     try:
         return dns.rdatatype.from_text(record_type) is not None
@@ -105,6 +131,12 @@ def get_dns_record(
 
     Returns:
         list[Tuple[str, str]]: List of DNS records.
+
+    Example:
+        >>> from valkyrie_tools.dns import get_dns_record
+        >>> records = get_dns_record("example.com", "A")
+        >>> all(rtype == "A" for rtype, _ in records)
+        True
     """
     record_type = record_type.upper()
     if is_valid_record_type(record_type) is False:
@@ -155,6 +187,12 @@ def get_dns_records(
 
     Returns:
         List[List[Tuple[str, str]]]: List of DNS records.
+
+    Example:
+        >>> from valkyrie_tools.dns import get_dns_records
+        >>> records = get_dns_records("example.com", record_types=["A"])
+        >>> isinstance(records, list)
+        True
     """
     records = []
     for record_type in record_types:

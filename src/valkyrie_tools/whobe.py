@@ -17,16 +17,34 @@ from .whois import get_ip_whois, get_whois
 
 
 NO_WHOIS_MSG = "No whois data"
+"""Message printed to stderr when :func:`get_whois` returns ``None``."""
 
 
 def print_ip_whois(whois: Optional[Dict[str, Any]]) -> None:  # pragma: no cover
-    """Print results to the terminal."""
+    """Print IP WHOIS data to the terminal.
+
+    Expects the dict returned by :func:`~valkyrie_tools.whois.get_ip_whois`
+    (i.e. ``IPWhois.lookup_whois()`` output).  Relevant top-level keys:
+
+    * ``asn`` - ASN number string (e.g. ``"15169"``)
+    * ``asn_country_code`` - two-letter country code
+    * ``asn_cidr`` - CIDR block announced by the ASN
+    * ``nets`` - list of network dicts, each with:
+      ``name``, ``handle``, ``cidr``, ``range``, ``address``, ``city``,
+      ``country``, ``postal_code``, ``emails``
+
+    If ``whois`` is not a :class:`dict`, an error message is printed to
+    stderr instead.
+
+    Args:
+        whois (Optional[Dict[str, Any]]): Parsed IP WHOIS record, or ``None``.
+    """
     if isinstance(whois, dict) is False:
         click.echo("No whois data.", err=True)
     else:
         click.echo(
-            f'   ASN: {whois.get("asn", "Unknown")}'
-            f' ({whois.get("asn_country_code", "Unknown")})'
+            f"   ASN: {whois.get('asn', 'Unknown')}"
+            f" ({whois.get('asn_country_code', 'Unknown')})"
         )
         click.echo("   CIDR: %s" % whois.get("asn_cidr", "Unknown"))
         click.echo("   Description: %s" % whois.get("asn_cidr", "Unknown"))
@@ -34,20 +52,22 @@ def print_ip_whois(whois: Optional[Dict[str, Any]]) -> None:  # pragma: no cover
 
         # Filter out networks that don't have a name or handle
         nets = filter(
-            lambda x: isinstance(x, dict)
-            and x.get("name") is not None
-            and x.get("handle") is not None,
+            lambda x: (
+                isinstance(x, dict)
+                and x.get("name") is not None
+                and x.get("handle") is not None
+            ),
             whois.get("nets", []) or [],
         )
         for net in nets:
             # Print the network name and handle
-            click.echo(f'      - {net.get("name", "Unknown")} ', nl=False)
-            click.echo(f'({net.get("handle", "Unknown")})')
+            click.echo(f"      - {net.get('name', 'Unknown')} ", nl=False)
+            click.echo(f"({net.get('handle', 'Unknown')})")
 
             # Print the netrange and total number of hosts
-            click.echo(f'        CIDR: {net["cidr"]}')
-            click.echo(f'        Netrange: ({net["range"]})', nl=False)
-            click.echo(f' - {get_net_size(net["cidr"])} Hosts')
+            click.echo(f"        CIDR: {net['cidr']}")
+            click.echo(f"        Netrange: ({net['range']})", nl=False)
+            click.echo(f" - {get_net_size(net['cidr'])} Hosts")
 
             # Print the address and location
             click.echo("        Address: ", nl=False)
@@ -81,13 +101,33 @@ def print_ip_whois(whois: Optional[Dict[str, Any]]) -> None:  # pragma: no cover
 
 
 def print_whois(whois: Optional[Dict[str, Any]]) -> None:  # pragma: no cover
-    """Print results to the terminal."""
+    """Print domain WHOIS data to the terminal.
+
+    Expects the dict returned by :func:`~valkyrie_tools.whois.get_whois`
+    (i.e. a :class:`whois.parser.WhoisEntry` / :class:`whois.parser.WhoisCom`
+    object, which behaves like a dict).  Keys consumed:
+
+    * ``registrar`` - registrar name
+    * ``org`` - registrant organisation
+    * ``emails`` - str or list of contact e-mail addresses
+    * ``name`` - registrant name
+    * ``address``, ``city``, ``state``, ``country``,
+      ``registrant_postal_code`` - registrant address fields
+    * ``creation_date``, ``expiration_date``, ``updated_date`` - lifecycle dates
+    * ``name_servers`` - list (or str) of authoritative name servers
+
+    If ``whois`` is not a :class:`dict`, :data:`NO_WHOIS_MSG` is printed to
+    stderr instead.
+
+    Args:
+        whois (Optional[Dict[str, Any]]): Parsed domain WHOIS record, or ``None``.
+    """
     if isinstance(whois, dict) is False:
         click.echo(NO_WHOIS_MSG, err=True)
     else:
         click.echo(
-            f'   Registrar: {whois.get("registrar", "Unknown")} '
-            f'({whois.get("org", "Unknown")})'
+            f"   Registrar: {whois.get('registrar', 'Unknown')} "
+            f"({whois.get('org', 'Unknown')})"
         )
 
         # status = whois.get("status", "Unknown")

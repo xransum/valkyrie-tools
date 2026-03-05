@@ -1,4 +1,16 @@
-"""Cache module for persistent data."""
+"""Cache module for in-memory function-result caching.
+
+Provides two caching strategies via the :class:`Cache` decorator class:
+
+* **Memoize** (:meth:`Cache.memoize`) - a simple dict-backed cache that stores
+  every unique argument tuple indefinitely (no size limit, no expiry).
+* **TTL cache** (:meth:`Cache.ttl_cache`) - wraps :func:`functools.lru_cache`
+  with a time-based hash so that results expire automatically after a
+  configurable number of seconds.
+
+A package-level singleton (:data:`cache`) is available for convenience so that
+individual modules do not need to instantiate :class:`Cache` themselves.
+"""
 
 from functools import lru_cache, update_wrapper
 from math import floor
@@ -36,7 +48,22 @@ class Cache:
             fn (Callable): The function to be memoized.
 
         Returns:
-            The memoized function.
+            Callable: The memoized function.
+
+        Example:
+            >>> from valkyrie_tools.cache import Cache
+            >>> cache = Cache()
+            >>> call_count = [0]
+            >>> @cache.memoize
+            ... def expensive(x):
+            ...     call_count[0] += 1
+            ...     return x * 2
+            >>> expensive(3)
+            6
+            >>> expensive(3)  # returns cached result
+            6
+            >>> call_count[0]  # only called once
+            1
         """
         memo = {}
 
@@ -57,16 +84,34 @@ class Cache:
     ) -> Callable:
         """Decorator that adds TTL caching functionality to a function.
 
+        Wraps :func:`functools.lru_cache` with a time-based hash so that
+        cached results expire after ``ttl`` seconds.
+
         Args:
             maxsize (int): The maximum number of function calls to
                 cache. Defaults to 128.
             typed (bool): Whether to differentiate between
                 arguments of different types. Defaults to False.
             ttl (int): The time-to-live (in seconds) for the cached
-                function results. Defaults to -1, which means no expiration.
+                function results. Defaults to -1, which means no expiration
+                (effectively ``65536`` seconds).
 
         Returns:
-            Callable: The decorated function.
+            Callable: The decorated function.  The returned wrapper also
+            exposes a ``clear_cache()`` method to manually invalidate the
+            underlying ``lru_cache``.
+
+        Example:
+            >>> from valkyrie_tools.cache import Cache
+            >>> cache = Cache()
+            >>> @cache.ttl_cache(maxsize=64, ttl=300)
+            ... def fetch_data(key):
+            ...     return f"data:{key}"
+            >>> fetch_data("x")
+            'data:x'
+            >>> fetch_data("x")  # served from cache within TTL window
+            'data:x'
+            >>> fetch_data.clear_cache()  # invalidate manually if needed
         """
         # Any ttl that's 0 or less, set to max.
         if ttl <= 0:
@@ -127,3 +172,9 @@ class Cache:
 
 
 cache = Cache()
+"""Package-level :class:`Cache` singleton.
+
+Used throughout the package as ``@cache.memoize`` and
+``@cache.ttl_cache(...)`` decorators so that individual modules do not need to
+instantiate :class:`Cache` themselves.
+"""
