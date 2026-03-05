@@ -111,12 +111,33 @@ def get_http_version_text(raw_version: int) -> str:
 def build_full_url(url: str, next_url: str) -> Optional[str]:
     """Builds a full URL from a relative URL.
 
+    Resolves ``next_url`` against ``url`` using the following rules:
+
+    - Empty ``next_url`` -> ``None``.
+    - ``next_url`` starting with ``http`` -> returned unchanged.
+    - ``next_url`` starting with ``//`` -> scheme from ``url`` is prepended.
+    - ``next_url`` starting with ``/`` -> scheme + netloc from ``url`` is
+      prepended.
+    - Otherwise -> :func:`urllib.parse.urljoin` is used.  Note: relative
+      path segments (e.g. ``"../other"``) may not resolve correctly in all
+      cases.
+
     Args:
-        url (str): url to build from
-        next_url (str): relative url to build
+        url (str): The base URL whose scheme/netloc is used for resolution.
+        next_url (str): The relative or absolute URL to resolve.
 
     Returns:
-        Optional[str]: full url
+        Optional[str]: The resolved absolute URL, or ``None`` if
+        ``next_url`` is an empty string.
+
+    Example:
+        >>> from valkyrie_tools.httpr import build_full_url
+        >>> build_full_url("https://example.com/page", "/other")
+        'https://example.com/other'
+        >>> build_full_url("https://example.com/page", "//cdn.example.com/img.png")
+        'https://cdn.example.com/img.png'
+        >>> build_full_url("https://example.com/page", "") is None
+        True
     """
     if next_url == "":
         return None
@@ -158,7 +179,28 @@ def make_request(
     url: str,
     **kwargs: Dict[str, Any],
 ) -> List[Union[str, Union[Response, Exception]]]:
-    """Make a request to a given URL."""
+    """Make a single HTTP request and return the URL paired with the response.
+
+    Wraps :func:`requests.request` with ``allow_redirects=False`` semantics
+    (callers control redirect following manually).  Any exception raised by
+    ``requests`` is caught and returned as the second element of the result
+    list instead of being re-raised, so callers should check whether the
+    second element is an :class:`Exception` subclass before accessing
+    response attributes.
+
+    Args:
+        method (str): HTTP method (e.g. ``"GET"``, ``"POST"``).
+        url (str): The URL to request.
+        **kwargs: Additional keyword arguments forwarded directly to
+            :func:`requests.request` (e.g. ``headers``, ``timeout``,
+            ``proxies``, ``verify``).
+
+    Returns:
+        List[Union[str, Union[Response, Exception]]]: A two-element list
+        ``[url, result]`` where ``result`` is either a
+        :class:`requests.Response` on success or the caught
+        :class:`Exception` on failure.
+    """
     # The result will be a tuple of the URL and the response object,
     # or the URL and the error that's raised.
     try:
@@ -170,13 +212,18 @@ def make_request(
 
 
 def get_next_url(res: Union[Response, Exception]) -> Optional[str]:
-    """Get the next URL from a response.
+    """Extract the next URL from an HTTP response's ``Location`` header.
 
     Args:
-        res (Union[Response, Exception]): response object
+        res (Union[Response, Exception]): The response object from a previous
+            request, or an :class:`Exception` if the request failed.
 
     Returns:
-        Optional[str]: next url
+        Optional[str]: The value of the ``Location`` header if present, or
+        ``None`` if ``res`` is an :class:`Exception` or no ``Location``
+        header exists.  Note that ``None`` is returned in both cases; callers
+        cannot distinguish between a network failure and a response with no
+        redirect header.
     """
     if isinstance(res, Exception):
         return None
@@ -198,7 +245,37 @@ def build_redirect_chain(
     follow_meta: bool = True,
     **kwargs: Dict[str, Any],
 ) -> List[Union[str, List[Union[str, Union[Response, Exception]]]]]:
-    """Build a chain of HTTP redirects for a given URL."""
+    """Build the full HTTP redirect chain for a given URL.
+
+    Follows ``Location`` header redirects (and optionally HTML ``<meta
+    http-equiv="refresh">`` redirects) one hop at a time until no further
+    redirect is detected or an exception terminates the chain.  Each hop is
+    collected as a two-element ``[url, response_or_exception]`` list.
+
+    Args:
+        method (str): HTTP method to use for every request in the chain
+            (e.g. ``"GET"``).
+        url (str): The initial URL to start the chain from.
+        timeout (Optional[int]): Request timeout in seconds applied to every
+            hop.  Defaults to ``30``.
+        headers (Optional[Dict[str, str]]): Extra request headers merged on
+            top of :data:`DEFAULT_REQUEST_HEADERS` for every hop.  Defaults
+            to ``None`` (only default headers are used).
+        proxies (Optional[Dict[str, str]]): Proxy map forwarded to
+            :func:`requests.request`.  Defaults to ``None``.
+        follow_meta (bool): When ``True``, also follow HTML meta
+            ``http-equiv="refresh"`` redirects when no ``Location`` header is
+            present.  Defaults to ``True``.
+        **kwargs: Additional keyword arguments forwarded to
+            :func:`make_request` (and on to :func:`requests.request`).
+
+    Returns:
+        List[Union[str, List[Union[str, Union[Response, Exception]]]]]:
+        An ordered list of hops.  Each hop is a two-element list
+        ``[url, result]`` where ``result`` is a :class:`requests.Response`
+        on success or an :class:`Exception` on failure.  The list contains
+        at least one entry (the initial URL).
+    """
     chains = []
     current_url = url  # type: Optional[str]
 

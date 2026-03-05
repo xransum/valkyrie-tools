@@ -25,8 +25,17 @@ from .httpr import build_redirect_chain, filter_headers, get_http_version_text
 
 # Initialize global variables
 HEADER_KEY_TRUNC_LENGTH = 70
+"""Maximum character length for header values before they are truncated.
+
+When ``--no-truncate`` is **not** passed, any header value longer than this
+many characters is truncated to ``value[:HEADER_KEY_TRUNC_LENGTH] + "..."``.
+"""
 QUIET_MODE = False
+"""Reserved flag for quiet output mode.  Currently unused by :func:`cli`."""
 OUTPUT_FILE = None
+"""Reserved variable for a future output-file option.  Currently unused by
+:func:`cli`.
+"""
 
 
 @common_options(
@@ -59,7 +68,29 @@ def cli(  # noqa: C901
     no_truncate: bool,
     show_headers: bool,
 ) -> None:
-    """Check whois on domains and ip addresses."""
+    """Check URL(s) for aliveness, HTTP status, and redirect chains.
+
+    Accepts one or more URLs as positional arguments (or via stdin / interactive
+    mode) and follows each URL's full redirect chain, printing the HTTP version,
+    status code, reason, and a filtered set of response headers for every hop.
+
+    Use ``-S`` / ``--show-headers`` to display all response headers instead of
+    the default curated set.  Use ``-t`` / ``--no-truncate`` to prevent long
+    header values from being truncated to
+    :data:`~valkyrie_tools.urlcheck.HEADER_KEY_TRUNC_LENGTH` characters.
+
+    Args:
+        ctx (click.Context): Click context object (injected by
+            :func:`click.pass_context`).
+        values (Tuple[str, ...]): Positional URL arguments provided on the
+            command line.
+        interactive (bool): When ``True``, reads URLs from stdin in
+            interactive mode.
+        no_truncate (bool): When ``True``, disables truncation of long
+            header values.
+        show_headers (bool): When ``True``, displays all response headers
+            instead of only the curated CDN/proxy subset.
+    """
     args = parse_input_methods(values, interactive, ctx)
 
     if len(args) == 0:
