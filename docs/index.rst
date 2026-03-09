@@ -77,6 +77,7 @@ Check url(s) for their aliveness and status.
 Global Options
 """"""""""""""
 
+- ``-j``, ``--json``          Output results as JSON.
 - ``-I``, ``--interactive``   Interactive mode.
 - ``-t``, ``--no-truncate``   Disable header truncation.
 - ``-S``, ``--show-headers``  Disable header truncation.
@@ -114,6 +115,7 @@ Get ip address info.
 Global Options
 """"""""""""""
 
+- ``-j``, ``--json``          Output results as JSON.
 - ``-I``, ``--interactive``   Interactive mode.
 - ``-h``, ``--help``          Show this message and exit.
 
@@ -151,6 +153,7 @@ Check DNS records for domains and IP addresses.
 Global Options
 """"""""""""""
 
+- ``-j``, ``--json``          Output results as JSON.
 - ``-I``, ``--interactive``   Interactive mode.
 - ``-t``, ``--rtypes``        DNS record type to query.
 - ``-h``, ``--help``          Show this message and exit.
@@ -184,6 +187,7 @@ Check whois on domains and ip addresses.
 Global Options
 """"""""""""""
 
+- ``-j``, ``--json``          Output results as JSON.
 - ``-I``, ``--interactive``   Interactive mode.
 - ``-h``, ``--help``          Show this message and exit.
 
@@ -208,3 +212,65 @@ Examples
         - NS2.GOOGLE.COM
         - NS3.GOOGLE.COM
         - NS4.GOOGLE.COM
+
+
+JSON Output & Piping
+--------------------
+
+Every command accepts a ``-j`` / ``--json`` flag that switches output to a
+structured JSON array instead of human-readable text.  The arrays are designed
+to be piped directly between commands -- each entry carries an ``"input"`` key
+that downstream commands use to extract their targets automatically.
+
+Single-command JSON output
+^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+.. code-block:: console
+
+    dnscheck --json google.com
+    [
+      {
+        "input": "google.com",
+        "records": {
+          "A": ["142.251.32.110"],
+          "AAAA": ["2404:6800:4003:c00::8a"],
+          "MX": ["smtp.google.com."]
+        }
+      }
+    ]
+
+.. code-block:: console
+
+    ipcheck --json 8.8.8.8
+    [
+      {
+        "input": "8.8.8.8",
+        "ip": "8.8.8.8",
+        "hostname": "dns.google",
+        "city": "Mountain View",
+        "region": "California",
+        "country": "US",
+        "org": "AS15169 Google LLC"
+      }
+    ]
+
+Piping between commands
+^^^^^^^^^^^^^^^^^^^^^^^
+
+Resolve DNS records then look up each IP in one pipeline:
+
+.. code-block:: console
+
+    dnscheck --json google.com | ipcheck --json
+
+Resolve DNS then run WHOIS on the domain targets:
+
+.. code-block:: console
+
+    dnscheck --json google.com | whobe --json
+
+Check a list of URLs then pipe the targets into WHOIS:
+
+.. code-block:: console
+
+    urlcheck --json https://example.com | whobe --json

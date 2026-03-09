@@ -1,7 +1,7 @@
 """Commons module tests."""
 
 import unittest
-from typing import Any
+from typing import Any, List, Tuple
 from unittest.mock import MagicMock, patch
 
 import click
@@ -10,6 +10,7 @@ from click.testing import CliRunner
 
 from valkyrie_tools.commons import (
     common_options,
+    emit_json,
     extract_domains,
     extract_emails,
     extract_ip_addrs,
@@ -18,6 +19,7 @@ from valkyrie_tools.commons import (
     extract_urls,
     handle_file_input,
     parse_input_methods,
+    parse_json_stdin,
     print_version,
 )
 
@@ -361,3 +363,128 @@ class TestRegexExtraction(unittest.TestCase):
         """Test extract_urls."""
         expected_result = ["http://domain.com"]
         self.assertEqual(extract_urls(self.text, unique=True), expected_result)
+
+
+class TestEmitJson(unittest.TestCase):
+    """Test suite for emit_json helper."""
+
+    def test_emit_list(self) -> None:
+        """Test that a list is serialised as a JSON array."""
+        import json
+        from io import StringIO
+        from unittest.mock import patch
+
+        buf = StringIO()
+        with patch("click.echo", side_effect=lambda s: buf.write(s + "\n")):
+            emit_json([{"input": "1.2.3.4", "foo": "bar"}])
+        data = json.loads(buf.getvalue())
+        self.assertIsInstance(data, list)
+        self.assertEqual(data[0]["input"], "1.2.3.4")
+
+    def test_emit_dict(self) -> None:
+        """Test that a plain dict is serialised as a JSON object."""
+        import json
+        from io import StringIO
+        from unittest.mock import patch
+
+        buf = StringIO()
+        with patch("click.echo", side_effect=lambda s: buf.write(s + "\n")):
+            emit_json({"key": "foo", "updated": True})
+        data = json.loads(buf.getvalue())
+        self.assertIsInstance(data, dict)
+        self.assertTrue(data["updated"])
+
+    def test_emit_non_serialisable_falls_back_to_str(self) -> None:
+        """Test that non-JSON-serialisable values are coerced to str."""
+        import datetime
+        import json
+        from io import StringIO
+        from unittest.mock import patch
+
+        dt = datetime.datetime(2024, 1, 1)
+        buf = StringIO()
+        with patch("click.echo", side_effect=lambda s: buf.write(s + "\n")):
+            emit_json({"ts": dt})
+        data = json.loads(buf.getvalue())
+        self.assertIsInstance(data["ts"], str)
+
+
+class TestParseJsonStdin(unittest.TestCase):
+    """Test suite for parse_json_stdin helper."""
+
+    def _identity_extractor(self, data: List[Any]) -> Tuple[str, ...]:
+        """Return input fields as a tuple."""
+        return tuple(str(e["input"]) for e in data)
+
+    def test_valid_json_array(self) -> None:
+        """Test that a valid JSON array is decoded and extracted."""
+        raw = '[{"input": "example.com"}]'
+        result = parse_json_stdin(raw, self._identity_extractor)
+        self.assertEqual(result, ("example.com",))
+
+    def test_invalid_json_raises(self) -> None:
+        """Test that invalid JSON raises UsageError."""
+        import click
+
+        with self.assertRaises(click.UsageError):
+            parse_json_stdin("not json at all", self._identity_extractor)
+
+    def test_non_array_json_raises(self) -> None:
+        """Test that a JSON object (not array) raises UsageError."""
+        import click
+
+        with self.assertRaises(click.UsageError):
+            parse_json_stdin('{"input": "x"}', self._identity_extractor)
+
+    def test_extractor_value_error_raises_usage_error(self) -> None:
+        """Test that a ValueError from the extractor is re-raised as UsageError."""
+        import click
+
+        def bad_extractor(data: List[Any]) -> Tuple[str, ...]:
+            raise ValueError("unrecognised schema")
+
+        with self.assertRaises(click.UsageError):
+            parse_json_stdin('[{"foo": "bar"}]', bad_extractor)
+
+
+class TestParseInputMethodsJsonMode(unittest.TestCase):
+    """Tests for parse_input_methods JSON-piping path."""
+
+    def setUp(self) -> None:
+        """Set up test fixtures."""
+        self.ctx = click.Context(click.Command("test"))
+
+    def _input_extractor(self, data: List[Any]) -> Tuple[str, ...]:
+        return tuple(str(e["input"]) for e in data)
+
+    @patch("sys.stdin", new_callable=MagicMock)
+    def test_json_mode_pipes_through_extractor(
+        self, mock_stdin: MagicMock
+    ) -> None:
+        """Piped JSON in --json mode is routed through the extractor."""
+        mock_stdin.isatty.return_value = False
+        mock_stdin.read.return_value = '[{"input": "1.2.3.4"}]'
+        result = parse_input_methods(
+            (),
+            False,
+            self.ctx,
+            output_json=True,
+            json_extractor=self._input_extractor,
+        )
+        self.assertEqual(result, ("1.2.3.4",))
+
+    @patch("sys.stdin", new_callable=MagicMock)
+    def test_json_mode_no_extractor_falls_back_to_plain(
+        self, mock_stdin: MagicMock
+    ) -> None:
+        """Piped input in --json mode with no extractor is treated as plain text."""
+        mock_stdin.isatty.return_value = False
+        mock_stdin.read.return_value = "example.com"
+        result = parse_input_methods(
+            (),
+            False,
+            self.ctx,
+            output_json=True,
+            json_extractor=None,
+        )
+        self.assertEqual(result, ("example.com",))
