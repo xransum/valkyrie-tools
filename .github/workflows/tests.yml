@@ -75,7 +75,7 @@ jobs:
 
       - name: Install Nox Poetry
         run: |
-          pip install .
+          pipx inject nox nox-poetry
 
       - name: Compute pre-commit cache key
         if: matrix.session == 'pre-commit'
@@ -154,7 +154,7 @@ jobs:
 
       - name: Install Nox Poetry
         run: |
-          pip install .
+          pipx inject nox nox-poetry
 
       - name: Download coverage data
         uses: actions/download-artifact@v4
