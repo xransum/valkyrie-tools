@@ -1,14 +1,16 @@
 """Shared utilities for valkyrie-tools CLI commands.
 
 Provides the :func:`common_options` Click decorator (which wires up
-``--interactive`` and a variadic ``values`` argument for every command),
-input-handling helpers (:func:`parse_input_methods`, :func:`handle_file_input`),
+``--interactive``, ``--json``, and a variadic ``values`` argument for every
+command), input-handling helpers (:func:`parse_input_methods`,
+:func:`handle_file_input`, :func:`parse_json_stdin`, :func:`emit_json`),
 and a family of regex-based extraction functions for domains, IP addresses,
 e-mail addresses, and URLs.
 """
 
 from __future__ import annotations
 
+import json
 import os
 import re
 import sys
@@ -31,6 +33,8 @@ from .files import is_binary_file
 
 __all__ = [
     "common_options",
+    "emit_json",
+    "parse_json_stdin",
     "print_version",
     "parse_input_methods",
     "extract_domains",
@@ -77,25 +81,14 @@ def common_options(
             context_settings=dict(help_option_names=["-h", "--help"]),
             hidden=True,
         )
-        # @click.option(
-        #     "-i",
-        #     "--input",
-        #     "input",
-        #     type=click.File('rb'),
-        #     default=click.get_binary_stream('stdin'),
-        #     help="Input file.",
-        # )
-        # @click.option(
-        #     "-o",
-        #     "--output",
-        #     "output",
-        #     type=click.File("w", encoding="utf8"),
-        #     help="Output file.",
-        #     # Doesn't work, the click stdout string does not work the same
-        #     # as what's used in the click.s?echo functions.
-        #     # default=click.get_text_stream("stdout"),
-        #     default=None,
-        # )
+        @click.option(
+            "-j",
+            "--json",
+            "output_json",
+            is_flag=True,
+            help="Output results as JSON.",
+            default=False,
+        )
         @click.option(
             "-I",
             "--interactive",
@@ -103,13 +96,6 @@ def common_options(
             help="Interactive mode.",
             default=False,
         )
-        # @click.version_option(
-        #    version,
-        #    "-V",
-        #    "--version",
-        #    message="%(prog)s %(version)s",
-        #    help="Show version and exit.",
-        # )
         @click.argument(
             "values", nargs=-1, type=click.UNPROCESSED, required=False
         )
@@ -155,6 +141,66 @@ def print_version(version: str) -> Callable[..., None]:
     return echo_version
 
 
+def emit_json(data: list[Any] | Any) -> None:
+    """Serialise ``data`` to JSON and print it to stdout.
+
+    Uses ``default=str`` so that non-serialisable values (e.g.
+    :class:`datetime.datetime` objects from WHOIS results) are coerced to
+    their string representation rather than raising a :class:`TypeError`.
+
+    Args:
+        data (Union[List[Any], Any]): JSON-serialisable value (typically a
+            list of dicts for tool commands, or a plain dict for single-item
+            config sub-commands) to serialise and print.
+    """
+    click.echo(json.dumps(data, indent=2, default=str))
+
+
+def parse_json_stdin(
+    raw: str,
+    extractor: Callable[[list[Any]], tuple[str, ...]],
+) -> tuple[str, ...]:
+    """Parse a JSON array from stdin and extract values using ``extractor``.
+
+    Attempts to decode ``raw`` as a JSON array.  If decoding fails, or the
+    result is not a list, a :class:`click.UsageError` is raised.  The
+    decoded list is then passed to ``extractor``, which is a per-command
+    function that inspects the JSON shape and returns the string values the
+    command should process.
+
+    Args:
+        raw (str): Raw stdin text that should be a JSON array.
+        extractor (Callable[[List[Any]], Tuple[str, ...]]): Per-command
+            function that maps the decoded JSON array to a tuple of string
+            targets.
+
+    Returns:
+        Tuple[str, ...]: Extracted string values for the command to process.
+
+    Raises:
+        UsageError: If ``raw`` is not valid JSON, not a JSON array, or
+            ``extractor`` raises a :class:`ValueError` for an unrecognised
+            upstream schema.
+    """
+    try:
+        data = json.loads(raw)
+    except json.JSONDecodeError as exc:
+        raise click.UsageError(
+            "Piped input is not valid JSON. Use --json on the upstream command."
+        ) from exc
+
+    if not isinstance(data, list):
+        raise click.UsageError(
+            "Piped JSON input must be a JSON array produced by another "
+            "valkyrie-tools command."
+        )
+
+    try:
+        return extractor(data)
+    except ValueError as exc:
+        raise click.UsageError(str(exc)) from exc
+
+
 def handle_file_input(
     file_path: str,
 ) -> str | None:
@@ -198,32 +244,42 @@ def parse_input_methods(
     values: tuple[str, ...],
     interactive: bool,
     ctx: click.Context,
+    output_json: bool = False,
+    json_extractor: Callable[[list[Any]], tuple[str, ...]] | None = None,
 ) -> tuple[str, ...]:
     """Parse input methods.
 
-    This function will attempt to read from stdin if
-    there's no values provided. If there's a "-" in the
-    values, it will also read from stdin. If there's
-    values provided, it will attempt to read from the
-    file path provided in the values. If there's no file
-    at the path provided, it will just use the value
-    provided.
+    This function will attempt to read from stdin if there's no values
+    provided.  If there's a ``"-"`` in the values, it will also read from
+    stdin.  If values are provided, it will attempt to read from the file
+    path provided in the values.  If there's no file at the path provided,
+    it will just use the value provided.
+
+    When ``output_json`` is ``True`` and data is piped on stdin, the raw
+    stdin text is treated as a JSON array produced by another
+    valkyrie-tools command.  ``json_extractor`` is called to map the decoded
+    array to a tuple of string targets; if ``json_extractor`` is ``None`` the
+    raw text falls through to normal processing.
 
     Args:
         values (Tuple[str, ...]): Positional arguments.
         interactive (bool): Whether to enable interactive mode.
         ctx (click.Context): Click context.
+        output_json (bool): Whether JSON output mode is active.
+            Defaults to ``False``.
+        json_extractor (Optional[Callable]): Per-command function that maps a
+            decoded JSON array to a tuple of string targets.  Only used when
+            ``output_json`` is ``True`` and stdin is not a TTY.
+            Defaults to ``None``.
 
     Returns:
         Tuple[str, ...]: Tuple of arguments.
     """
     args: tuple[str, ...] = ()
 
-    # When interactive is enabled, drop to an input
-    # stream.
+    # When interactive is enabled, drop to an input stream.
     if interactive is True:
-        # Convert the script name to ascii art as a header
-        # and print it.
+        # Convert the script name to ascii art as a header and print it.
         click.echo(text2art(ctx.command.name))
 
         # Print the interactive prompt and read from stdin.
@@ -243,12 +299,20 @@ def parse_input_methods(
             values = tuple(v for v in values if v != "-")
 
         # Read data from pipe
-        values += (sys.stdin.read().strip(),)
+        piped = sys.stdin.read().strip()
+
+        # In JSON mode with a registered extractor, treat piped input as a
+        # JSON array from an upstream valkyrie-tools command.  Only attempt
+        # parsing when there is actually content to parse; an empty pipe is
+        # treated the same as no arguments.
+        if output_json and json_extractor is not None and piped != "":
+            return parse_json_stdin(piped, json_extractor)
+
+        values += (piped,)
 
     # Iterate over each argument
     for arg in values:
-        # Avoid empty strings since Path.exists return True
-        # for them.
+        # Avoid empty strings since Path.exists return True for them.
         if os.path.exists(arg) is True:
             file_content = handle_file_input(arg)
             if file_content is None:  # pragma: no cover

@@ -1,5 +1,6 @@
 """Valkyrie command tests."""
 
+import json
 import os
 import unittest
 from unittest.mock import MagicMock, patch
@@ -137,3 +138,79 @@ class TestValkyrie(unittest.TestCase):
         )
         self.assertEqual(result.exit_code, 0)
         # mock_click_echo.assert_called()
+
+
+class TestValkyrieConfigJson(unittest.TestCase):
+    """JSON output tests for valkyrie config sub-commands."""
+
+    def setUp(self) -> None:
+        """Set up test fixtures."""
+        self.runner = CliRunner()
+        self.test_config = Config(
+            f"test_{__appname__}", defaults={"GLOBAL": {"testKey": "testValue"}}
+        )
+
+    # ------ config set ------
+
+    @patch("valkyrie_tools.valkyrie.configs")
+    def test_config_set_json(self, mock_configs: MagicMock) -> None:
+        """Test config set --json emits correct JSON object."""
+        mock_configs.return_value = self.test_config
+        result = self.runner.invoke(
+            cli.commands["config"].commands["set"],  # type: ignore[attr-defined]
+            ["--json", "myKey", "myValue"],
+        )
+        self.assertEqual(result.exit_code, 0)
+        data = json.loads(result.output)
+        self.assertEqual(data["key"], "myKey")
+        self.assertTrue(data["updated"])
+
+    # ------ config get ------
+
+    @patch("valkyrie_tools.valkyrie.configs")
+    def test_config_get_json(self, mock_configs: MagicMock) -> None:
+        """Test config get --json emits correct JSON object."""
+        mock_configs.return_value = self.test_config
+        mock_configs.get.return_value = "testValue"
+        result = self.runner.invoke(
+            cli.commands["config"].commands["get"],  # type: ignore[attr-defined]
+            ["--json", "testKey"],
+        )
+        self.assertEqual(result.exit_code, 0)
+        data = json.loads(result.output)
+        self.assertEqual(data["key"], "testKey")
+        self.assertIn("value", data)
+
+    # ------ config delete ------
+
+    @patch("valkyrie_tools.valkyrie.configs")
+    def test_config_delete_json(self, mock_configs: MagicMock) -> None:
+        """Test config delete --json emits correct JSON object."""
+        mock_configs.return_value = self.test_config
+        result = self.runner.invoke(
+            cli.commands["config"].commands["delete"],  # type: ignore[attr-defined]
+            ["--json", "testKey"],
+        )
+        self.assertEqual(result.exit_code, 0)
+        data = json.loads(result.output)
+        self.assertEqual(data["key"], "testKey")
+        self.assertTrue(data["deleted"])
+
+    # ------ config list ------
+
+    @patch("valkyrie_tools.valkyrie.configs")
+    def test_config_list_json(self, mock_configs: MagicMock) -> None:
+        """Test config list --json emits a JSON array."""
+        mock_configs.config.items.return_value = [
+            ("key1", "val1"),
+            ("key2", "val2"),
+        ]
+        result = self.runner.invoke(
+            cli.commands["config"].commands["list"],  # type: ignore[attr-defined]
+            ["--json"],
+        )
+        self.assertEqual(result.exit_code, 0)
+        data = json.loads(result.output)
+        self.assertIsInstance(data, list)
+        self.assertEqual(data[0]["key"], "key1")
+        self.assertEqual(data[0]["value"], "val1")

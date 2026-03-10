@@ -2,13 +2,18 @@
 
 import re
 import sys
-from typing import Any, Dict, Tuple, Union, cast
+from typing import Any, Dict, List, Tuple, Union, cast
 
 import click
 import requests
 from requests import Response
 
-from .commons import common_options, extract_urls, parse_input_methods
+from .commons import (
+    common_options,
+    emit_json,
+    extract_urls,
+    parse_input_methods,
+)
 from .constants import (  # URL_REGEX,
     DEFAULT_CATEGORIZED_HEADERS,
     HELP_SHORT_TEXT,
@@ -30,13 +35,66 @@ HEADER_KEY_TRUNC_LENGTH = 70
 
 When ``--no-truncate`` is **not** passed, any header value longer than this
 many characters is truncated to ``value[:HEADER_KEY_TRUNC_LENGTH] + "..."``.
-"""
+"""  # pragma: no cover
 QUIET_MODE = False
-"""Reserved flag for quiet output mode.  Currently unused by :func:`cli`."""
+"""Reserved flag for quiet output mode.  Currently unused by
+:func:`cli`.
+"""  # pragma: no cover
 OUTPUT_FILE = None
 """Reserved variable for a future output-file option.  Currently unused by
 :func:`cli`.
-"""
+"""  # pragma: no cover
+
+
+def json_extractor_urlcheck(data: List[Any]) -> Tuple[str, ...]:
+    """Extract target URLs from upstream valkyrie-tools JSON.
+
+    Accepts any array of objects that each contain an ``"input"`` key, which
+    is the shape produced by every valkyrie-tools command.
+
+    Args:
+        data (List[Any]): Decoded JSON array from stdin.
+
+    Returns:
+        Tuple[str, ...]: Tuple of ``input`` values to check.
+
+    Raises:
+        ValueError: If ``data`` does not match a recognised upstream schema.
+    """
+    if all(isinstance(entry, dict) and "input" in entry for entry in data):
+        return tuple(str(entry["input"]) for entry in data)
+
+    raise ValueError(
+        "Unrecognised upstream JSON schema for urlcheck. "
+        "Expected a valkyrie-tools --json output array "
+        "(objects with an 'input' key)."
+    )
+
+
+def _get_error_message(response: Exception) -> str:
+    """Map a requests exception to a human-readable error string.
+
+    Args:
+        response (Exception): The exception raised during the HTTP request.
+
+    Returns:
+        str: Human-readable error message.
+    """
+    if isinstance(response, requests.exceptions.SSLError):
+        return REQUESTS_SSL_ERROR_MESSAGE
+    if isinstance(response, requests.exceptions.Timeout):
+        return REQUESTS_TIMEOUT_ERROR_MESSAGE
+    if isinstance(response, requests.exceptions.TooManyRedirects):
+        return REQUESTS_TOO_MANY_REDIRECTS_ERROR_MESSAGE
+    if isinstance(response, requests.exceptions.ConnectionError):
+        for (
+            search_text,
+            error_message,
+        ) in REQUESTS_CONNECTION_ERROR_MESSAGES.items():
+            if re.search(search_text, str(response)) is not None:
+                return error_message
+        return REQUESTS_UNHANDLED_CONNECTION_ERROR_MESSAGE
+    return str(response)
 
 
 @common_options(
@@ -66,19 +124,25 @@ def cli(  # noqa: C901
     ctx: click.Context,
     values: Tuple[str, ...],
     interactive: bool,
+    output_json: bool,
     no_truncate: bool,
     show_headers: bool,
 ) -> None:
     """Check URL(s) for aliveness, HTTP status, and redirect chains.
 
-    Accepts one or more URLs as positional arguments (or via stdin / interactive
-    mode) and follows each URL's full redirect chain, printing the HTTP version,
-    status code, reason, and a filtered set of response headers for every hop.
+    Accepts one or more URLs as positional arguments (or via stdin /
+    interactive mode) and follows each URL's full redirect chain, printing
+    the HTTP version, status code, reason, and a filtered set of response
+    headers for every hop.
 
-    Use ``-S`` / ``--show-headers`` to display all response headers instead of
-    the default curated set.  Use ``-t`` / ``--no-truncate`` to prevent long
-    header values from being truncated to
+    Use ``-S`` / ``--show-headers`` to display all response headers instead
+    of the default curated set.  Use ``-t`` / ``--no-truncate`` to prevent
+    long header values from being truncated to
     :data:`~valkyrie_tools.urlcheck.HEADER_KEY_TRUNC_LENGTH` characters.
+
+    When ``--json`` is active, results are emitted as a JSON array.  Each
+    entry has an ``"input"`` key and a ``"chain"`` list of hop dicts.  Error
+    hops contain an ``"error"`` key instead of status/headers fields.
 
     Args:
         ctx (click.Context): Click context object (injected by
@@ -87,14 +151,25 @@ def cli(  # noqa: C901
             command line.
         interactive (bool): When ``True``, reads URLs from stdin in
             interactive mode.
+        output_json (bool): When ``True``, emits results as a JSON array
+            instead of human-readable text.
         no_truncate (bool): When ``True``, disables truncation of long
             header values.
         show_headers (bool): When ``True``, displays all response headers
             instead of only the curated CDN/proxy subset.
     """
-    args = parse_input_methods(values, interactive, ctx)
+    args = parse_input_methods(
+        values,
+        interactive,
+        ctx,
+        output_json=output_json,
+        json_extractor=json_extractor_urlcheck,
+    )
 
     if len(args) == 0:
+        if output_json:
+            emit_json([])
+            sys.exit(0)
         click.echo("Error: %s" % NO_ARGS_TEXT, err=True)
         click.echo(HELP_SHORT_TEXT.format(name=ctx.command.name), err=True)
         sys.exit(1)
@@ -104,6 +179,52 @@ def cli(  # noqa: C901
         for url in extract_urls(arg):
             if url not in urls:
                 urls.append(url)
+
+    if output_json:
+        json_results: List[Dict[str, Any]] = []
+        for url in urls:
+            chain_results: List[Any] = list(
+                build_redirect_chain("GET", url, 30, {}, None, True)
+            )
+            chain: List[Dict[str, Any]] = []
+            for hop_url, response in chain_results:
+                hop_url = cast(str, hop_url)
+                response = cast(Union[Response, Exception, None], response)
+                if isinstance(response, Exception):
+                    chain.append(
+                        {
+                            "url": hop_url,
+                            "error": _get_error_message(response),
+                        }
+                    )
+                elif isinstance(response, Response):
+                    http_version = get_http_version_text(response.raw.version)
+                    resp_headers = cast(Dict[str, str], dict(response.headers))
+                    if show_headers:
+                        resp_headers = filter_headers(resp_headers, [])
+                    else:
+                        resp_headers = filter_headers(
+                            resp_headers,
+                            [
+                                v
+                                for vv in (DEFAULT_CATEGORIZED_HEADERS.values())
+                                for v in vv
+                            ],
+                        )
+                    chain.append(
+                        {
+                            "url": hop_url,
+                            "http_version": http_version,
+                            "status_code": response.status_code,
+                            "reason": response.reason,
+                            "headers": resp_headers,
+                        }
+                    )
+                else:
+                    chain.append({"url": hop_url})
+            json_results.append({"input": url, "chain": chain})
+        emit_json(json_results)
+        return
 
     for u in range(len(urls)):
         url = urls[u]

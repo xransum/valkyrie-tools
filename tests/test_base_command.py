@@ -3,6 +3,7 @@
 Inherited unittest class mixin imported from command test suites.
 """
 
+import json
 import unittest
 from typing import Optional
 from unittest.mock import patch
@@ -66,3 +67,13 @@ class BaseCommandTest(unittest.TestCase):
         result = self.runner.invoke(self.command, [])
         self.assertIn(NO_ARGS_TEXT, result.output)
         self.assertEqual(result.exit_code, 1)
+
+    def test_json_flag_empty_args(self) -> None:
+        """Test --json with no args emits empty array and exits 0."""
+        if self.command is None:
+            self.skipTest("BaseCommandTest requires a subclass to set command")
+        result = self.runner.invoke(self.command, ["--json"])
+        self.assertEqual(result.exit_code, 0)
+        data = json.loads(result.output)
+        self.assertIsInstance(data, list)
+        self.assertEqual(len(data), 0)

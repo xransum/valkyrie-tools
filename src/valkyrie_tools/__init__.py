@@ -9,7 +9,19 @@ sub-command shares for persistent configuration.
 __all__ = ["__version__", "DEFAULT_CONFIG_FILE", "config"]
 
 __appname__ = "valkyrie_tools"
-__version__ = "0.1.0"  # noqa
+
+try:
+    from importlib.metadata import PackageNotFoundError, version
+except ImportError:  # pragma: no cover
+    from importlib_metadata import (  # type: ignore[assignment]
+        PackageNotFoundError,
+        version,
+    )
+
+try:
+    __version__ = version(__name__)
+except PackageNotFoundError:  # pragma: no cover
+    __version__ = "unknown"
 
 # from .configs import Config
 

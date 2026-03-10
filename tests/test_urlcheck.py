@@ -1,5 +1,6 @@
 """Urlcheck test module."""
 
+import json
 import unittest
 from typing import List, Optional, Tuple, Union, cast
 from unittest.mock import MagicMock, Mock, patch
@@ -14,7 +15,12 @@ from valkyrie_tools.exceptions import (
     REQUESTS_TOO_MANY_REDIRECTS_ERROR_MESSAGE,
     REQUESTS_UNHANDLED_CONNECTION_ERROR_MESSAGE,
 )
-from valkyrie_tools.urlcheck import HEADER_KEY_TRUNC_LENGTH, cli
+from valkyrie_tools.urlcheck import (
+    HEADER_KEY_TRUNC_LENGTH,
+    _get_error_message,
+    cli,
+    json_extractor_urlcheck,
+)
 
 from .test_base_command import BaseCommandTest
 
@@ -364,3 +370,166 @@ class TestURLCheckCLI(BaseCommandTest, unittest.TestCase):
             mock_make_request.return_value = mock_chain_link
             result = self.runner.invoke(self.command, url)
             self.assertIn(" - %i - " % code, result.output)
+
+
+class TestUrlcheckJson(unittest.TestCase):
+    """JSON output tests for urlcheck command."""
+
+    def setUp(self) -> None:
+        """Set up test fixtures."""
+        from click.testing import CliRunner
+
+        self.runner = CliRunner()
+
+    def _make_mock_response(
+        self, url: str, status_code: int, reason: str, version: int = 11
+    ) -> Mock:
+        """Build a minimal mock requests.Response."""
+        from requests import Response
+
+        resp = Mock()
+        resp.__class__ = Response  # type: ignore[assignment]
+        resp.status_code = status_code
+        resp.reason = reason
+        resp.raw.version = version
+        resp.headers = {}
+        return resp
+
+    @patch("valkyrie_tools.urlcheck.build_redirect_chain")
+    def test_json_single_url(
+        self, mock_build_redirect_chain: MagicMock
+    ) -> None:
+        """Test --json output for a single URL."""
+        url = "http://example.com"
+        resp = self._make_mock_response(url, 200, "OK")
+        mock_build_redirect_chain.return_value = [[url, resp]]
+        result = self.runner.invoke(cli, ["--json", url])
+        self.assertEqual(result.exit_code, 0)
+        data = json.loads(result.output)
+        self.assertIsInstance(data, list)
+        self.assertEqual(data[0]["input"], url)
+        self.assertIn("chain", data[0])
+        self.assertEqual(data[0]["chain"][0]["status_code"], 200)
+
+    @patch("valkyrie_tools.urlcheck.build_redirect_chain")
+    def test_json_exception_hop_becomes_error_entry(
+        self, mock_build_redirect_chain: MagicMock
+    ) -> None:
+        """Test that an exception hop becomes an error dict in JSON mode."""
+        url = "http://example.com"
+        error = requests.exceptions.SSLError(REQUESTS_SSL_ERROR_MESSAGE)
+        mock_build_redirect_chain.return_value = [[url, error]]
+        result = self.runner.invoke(cli, ["--json", url])
+        self.assertEqual(result.exit_code, 0)
+        data = json.loads(result.output)
+        self.assertIn("error", data[0]["chain"][0])
+
+    @patch("valkyrie_tools.urlcheck.build_redirect_chain")
+    def test_json_none_hop_produces_url_only_entry(
+        self, mock_build_redirect_chain: MagicMock
+    ) -> None:
+        """Test that a None hop produces a bare url entry."""
+        url = "http://example.com"
+        mock_build_redirect_chain.return_value = [[url, None]]
+        result = self.runner.invoke(cli, ["--json", url])
+        self.assertEqual(result.exit_code, 0)
+        data = json.loads(result.output)
+        self.assertEqual(data[0]["chain"][0], {"url": url})
+
+    @patch("valkyrie_tools.urlcheck.build_redirect_chain")
+    def test_json_show_headers_flag(
+        self, mock_build_redirect_chain: MagicMock
+    ) -> None:
+        """Test that --show-headers passes all headers in JSON mode."""
+        url = "http://example.com"
+        resp = self._make_mock_response(url, 200, "OK")
+        resp.headers = {"X-Custom": "value", "Content-Type": "text/html"}
+        mock_build_redirect_chain.return_value = [[url, resp]]
+        result = self.runner.invoke(cli, ["--json", "--show-headers", url])
+        self.assertEqual(result.exit_code, 0)
+        data = json.loads(result.output)
+        headers = data[0]["chain"][0]["headers"]
+        self.assertIn("X-Custom", headers)
+
+    @patch("valkyrie_tools.urlcheck.build_redirect_chain")
+    def test_json_piped_input_extractor(
+        self, mock_build_redirect_chain: MagicMock
+    ) -> None:
+        """Test that upstream JSON is parsed via extractor."""
+        url = "http://example.com"
+        resp = self._make_mock_response(url, 200, "OK")
+        mock_build_redirect_chain.return_value = [[url, resp]]
+        upstream = json.dumps([{"input": url}])
+        result = self.runner.invoke(cli, ["--json"], input=upstream)
+        self.assertEqual(result.exit_code, 0)
+        data = json.loads(result.output)
+        self.assertEqual(data[0]["input"], url)
+
+    def test_json_piped_unrecognised_schema_raises(self) -> None:
+        """Test that unrecognised piped JSON causes a non-zero exit."""
+        upstream = json.dumps([{"foo": "bar"}])
+        result = self.runner.invoke(cli, ["--json"], input=upstream)
+        self.assertNotEqual(result.exit_code, 0)
+
+
+class TestGetErrorMessage(unittest.TestCase):
+    """Unit tests for _get_error_message helper."""
+
+    def test_ssl_error(self) -> None:
+        """Test SSLError maps to the SSL message."""
+        err = requests.exceptions.SSLError("ssl")
+        self.assertEqual(_get_error_message(err), REQUESTS_SSL_ERROR_MESSAGE)
+
+    def test_timeout_error(self) -> None:
+        """Test Timeout maps to the timeout message."""
+        err = requests.exceptions.Timeout("timeout")
+        self.assertEqual(
+            _get_error_message(err), REQUESTS_TIMEOUT_ERROR_MESSAGE
+        )
+
+    def test_too_many_redirects_error(self) -> None:
+        """Test TooManyRedirects maps to its message."""
+        err = requests.exceptions.TooManyRedirects("redir")
+        self.assertEqual(
+            _get_error_message(err), REQUESTS_TOO_MANY_REDIRECTS_ERROR_MESSAGE
+        )
+
+    def test_connection_error_known(self) -> None:
+        """Test a known ConnectionError pattern maps to its message."""
+        first_key = next(iter(REQUESTS_CONNECTION_ERROR_MESSAGES))
+        first_val = REQUESTS_CONNECTION_ERROR_MESSAGES[first_key]
+        err = requests.exceptions.ConnectionError(first_key)
+        self.assertEqual(_get_error_message(err), first_val)
+
+    def test_connection_error_unknown(self) -> None:
+        """Test an unknown ConnectionError maps to the unhandled message."""
+        err = requests.exceptions.ConnectionError("totally unknown error text")
+        self.assertEqual(
+            _get_error_message(err),
+            REQUESTS_UNHANDLED_CONNECTION_ERROR_MESSAGE,
+        )
+
+    def test_generic_exception(self) -> None:
+        """Test a generic exception uses str()."""
+        err = ValueError("some problem")
+        self.assertEqual(_get_error_message(err), "some problem")
+
+
+class TestJsonExtractorUrlcheck(unittest.TestCase):
+    """Unit tests for json_extractor_urlcheck."""
+
+    def test_extracts_input_fields(self) -> None:
+        """Test that 'input' fields are extracted."""
+        data = [{"input": "http://example.com"}, {"input": "http://other.com"}]
+        result = json_extractor_urlcheck(data)
+        self.assertEqual(result, ("http://example.com", "http://other.com"))
+
+    def test_unrecognised_schema_raises(self) -> None:
+        """Test that missing 'input' key raises ValueError."""
+        with self.assertRaises(ValueError):
+            json_extractor_urlcheck([{"chain": []}])
+
+    def test_empty_list_returns_empty_tuple(self) -> None:
+        """Test that an empty list returns an empty tuple."""
+        result = json_extractor_urlcheck([])
+        self.assertEqual(result, ())

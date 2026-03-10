@@ -1,12 +1,13 @@
 """Whobe command-line script."""
 
 import sys
-from typing import Any, Dict, Optional, Tuple
+from typing import Any, Dict, List, Optional, Tuple
 
 import click
 
 from .commons import (
     common_options,
+    emit_json,
     extract_domains,
     extract_ip_addrs,
     parse_input_methods,
@@ -17,7 +18,129 @@ from .whois import get_ip_whois, get_whois
 
 
 NO_WHOIS_MSG = "No whois data"
-"""Message printed to stderr when :func:`get_whois` returns ``None``."""
+"""Message printed to stderr when :func:`get_whois` returns
+``None``.
+"""  # pragma: no cover
+
+
+def json_extractor_whobe(data: List[Any]) -> Tuple[str, ...]:
+    """Extract target domains/IPs from upstream valkyrie-tools JSON.
+
+    Accepts any array of objects that each contain an ``"input"`` key, which
+    is the shape produced by every valkyrie-tools command.
+
+    Args:
+        data (List[Any]): Decoded JSON array from stdin.
+
+    Returns:
+        Tuple[str, ...]: Tuple of ``input`` values to query.
+
+    Raises:
+        ValueError: If ``data`` does not match a recognised upstream schema.
+    """
+    if all(isinstance(entry, dict) and "input" in entry for entry in data):
+        return tuple(str(entry["input"]) for entry in data)
+
+    raise ValueError(
+        "Unrecognised upstream JSON schema for whobe. "
+        "Expected a valkyrie-tools --json output array "
+        "(objects with an 'input' key)."
+    )
+
+
+def ip_whois_to_dict(
+    arg: str, whois: Optional[Dict[str, Any]]
+) -> Dict[str, Any]:
+    """Convert IP WHOIS data to a JSON-serialisable dict.
+
+    Args:
+        arg (str): The IP address that was queried.
+        whois (Optional[Dict[str, Any]]): Parsed IP WHOIS record, or
+            ``None``.
+
+    Returns:
+        Dict[str, Any]: Dict with ``"input"``, ``"type"``, and WHOIS fields,
+        or an ``"error"`` key when ``whois`` is not a dict.
+    """
+    if not isinstance(whois, dict):
+        return {"input": arg, "type": "ip", "error": "No whois data."}
+
+    nets: List[Dict[str, Any]] = []
+    raw_nets = filter(
+        lambda x: (
+            isinstance(x, dict)
+            and x.get("name") is not None
+            and x.get("handle") is not None
+        ),
+        whois.get("nets", []) or [],
+    )
+    for net in raw_nets:
+        net_entry: Dict[str, Any] = {
+            "name": net.get("name"),
+            "handle": net.get("handle"),
+            "cidr": net.get("cidr"),
+            "range": net.get("range"),
+            "address": net.get("address"),
+            "city": net.get("city"),
+            "country": net.get("country"),
+            "postal_code": net.get("postal_code"),
+            "emails": net.get("emails") or [],
+            "hosts": get_net_size(net["cidr"]) if net.get("cidr") else None,
+        }
+        nets.append(net_entry)
+
+    return {
+        "input": arg,
+        "type": "ip",
+        "asn": whois.get("asn"),
+        "asn_country_code": whois.get("asn_country_code"),
+        "asn_cidr": whois.get("asn_cidr"),
+        "nets": nets,
+    }
+
+
+def domain_whois_to_dict(
+    arg: str, whois: Optional[Dict[str, Any]]
+) -> Dict[str, Any]:
+    """Convert domain WHOIS data to a JSON-serialisable dict.
+
+    Args:
+        arg (str): The domain that was queried.
+        whois (Optional[Dict[str, Any]]): Parsed domain WHOIS record, or
+            ``None``.
+
+    Returns:
+        Dict[str, Any]: Dict with ``"input"``, ``"type"``, and WHOIS fields,
+        or an ``"error"`` key when ``whois`` is not a dict.
+    """
+    if not isinstance(whois, dict):
+        return {"input": arg, "type": "domain", "error": NO_WHOIS_MSG}
+
+    emails = whois.get("emails", [])
+    if isinstance(emails, str):
+        emails = [emails]
+
+    name_servers = whois.get("name_servers", [])
+    if isinstance(name_servers, str):
+        name_servers = [name_servers]
+
+    return {
+        "input": arg,
+        "type": "domain",
+        "registrar": whois.get("registrar"),
+        "org": whois.get("org"),
+        "emails": emails,
+        "name": whois.get("name"),
+        "address": whois.get("address"),
+        "city": whois.get("city"),
+        "state": whois.get("state"),
+        "country": whois.get("country"),
+        "registrant_postal_code": whois.get("registrant_postal_code"),
+        "creation_date": whois.get("creation_date"),
+        "expiration_date": whois.get("expiration_date"),
+        "updated_date": whois.get("updated_date"),
+        "name_servers": list(name_servers) if name_servers else [],
+    }
 
 
 def print_ip_whois(whois: Optional[Dict[str, Any]]) -> None:  # pragma: no cover
@@ -120,7 +243,8 @@ def print_whois(whois: Optional[Dict[str, Any]]) -> None:  # pragma: no cover
     stderr instead.
 
     Args:
-        whois (Optional[Dict[str, Any]]): Parsed domain WHOIS record, or ``None``.
+        whois (Optional[Dict[str, Any]]): Parsed domain WHOIS record, or
+            ``None``.
     """
     if not isinstance(whois, dict):
         click.echo(NO_WHOIS_MSG, err=True)
@@ -129,14 +253,6 @@ def print_whois(whois: Optional[Dict[str, Any]]) -> None:  # pragma: no cover
             f"   Registrar: {whois.get('registrar', 'Unknown')} "
             f"({whois.get('org', 'Unknown')})"
         )
-
-        # status = whois.get("status", "Unknown")
-        # if isinstance(status, (list, tuple)):
-        #     status = ", ".join(
-        #         list(set([text.split(" ")[0] for text in status]))
-        #     )
-        #
-        # click.echo(f"   Status: {status}")
 
         click.echo("   Emails: ")
         emails = whois.get("emails", ["None"])
@@ -185,10 +301,38 @@ def cli(
     ctx: click.Context,
     values: Tuple[str, ...],
     interactive: bool,
+    output_json: bool,
 ) -> None:
-    """Check whois on domains and ip addresses."""
-    values = parse_input_methods(values, interactive, ctx)
+    """Check whois on domains and ip addresses.
+
+    Accepts one or more domains or IP addresses as positional arguments (or
+    via stdin / interactive mode).
+
+    When ``--json`` is active, results are emitted as a JSON array.  Each
+    entry has ``"input"`` and ``"type"`` keys plus the relevant WHOIS fields,
+    or an ``"error"`` key when no data is available.
+
+    Args:
+        ctx (click.Context): Click context object (injected by
+            :func:`click.pass_context`).
+        values (Tuple[str, ...]): Positional domain or IP address arguments
+            provided on the command line.
+        interactive (bool): When ``True``, reads values from stdin in
+            interactive mode.
+        output_json (bool): When ``True``, emits results as a JSON array
+            instead of human-readable text.
+    """
+    values = parse_input_methods(
+        values,
+        interactive,
+        ctx,
+        output_json=output_json,
+        json_extractor=json_extractor_whobe,
+    )
     if len(values) == 0:
+        if output_json:
+            emit_json([])
+            sys.exit(0)
         click.echo("Error: %s" % NO_ARGS_TEXT, err=True)
         click.echo(HELP_SHORT_TEXT.format(name=ctx.command.name), err=True)
         sys.exit(1)
@@ -196,6 +340,18 @@ def cli(
     ip_addrs = extract_ip_addrs("\n".join(values), unique=True)
     domains = extract_domains("\n".join(values), unique=True)
     args = ip_addrs + domains
+
+    if output_json:
+        json_results: List[Dict[str, Any]] = []
+        for arg in args:
+            if is_valid_ip_addr(arg):
+                whois: Any = get_ip_whois(arg)
+                json_results.append(ip_whois_to_dict(arg, whois))
+            else:
+                domain_whois: Any = get_whois(arg)
+                json_results.append(domain_whois_to_dict(arg, domain_whois))
+        emit_json(json_results)
+        return
 
     for a in range(len(args)):
         arg = args[a]
