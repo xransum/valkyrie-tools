@@ -30,7 +30,6 @@ from .constants import (
 )
 from .files import is_binary_file
 
-
 __all__ = [
     "common_options",
     "emit_json",
@@ -117,7 +116,12 @@ def print_version(version: str) -> Callable[..., None]:
 
     Returns:
         Callable: Click callback function.
+
+    Raises:
+        TypeError: If ``version`` is an empty string.
     """
+    if not version:
+        raise TypeError("version must be a non-empty string")
 
     def echo_version(
         ctx: click.Context,

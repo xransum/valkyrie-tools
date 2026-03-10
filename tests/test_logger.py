@@ -8,7 +8,6 @@ from valkyrie_tools.logger import (
     setup_logger,
 )
 
-
 logger = setup_logger(0)
 
 

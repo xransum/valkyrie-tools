@@ -22,7 +22,6 @@ import requests
 from .cache import cache
 from .constants import DEFAULT_REQUEST_TIMEOUT
 
-
 # Global constants
 PRIVATE_IP_CIDR_RANGES = [
     "10.0.0.0/8",  # Private-Use Networks - RFC1918

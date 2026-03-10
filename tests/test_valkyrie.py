@@ -12,7 +12,6 @@ from valkyrie_tools import __appname__
 from valkyrie_tools.config import Config
 from valkyrie_tools.valkyrie import cli
 
-
 test_config_file = f"test_{__appname__}"
 test_config_file_path = os.path.join(user_config_dir(), f".{test_config_file}")
 test_config_defaults = {

@@ -5,7 +5,6 @@ import unittest
 
 from valkyrie_tools.config import Config
 
-
 # configparser, os
 # appdirs.user_config_dir
 

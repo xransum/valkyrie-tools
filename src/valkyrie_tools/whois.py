@@ -7,7 +7,6 @@ import ipwhois  # type: ignore[import-untyped]
 import whois  # type: ignore[import-untyped]
 from ipwhois import IPWhois
 
-
 __all__ = [
     "get_whois",
     "get_ip_whois",

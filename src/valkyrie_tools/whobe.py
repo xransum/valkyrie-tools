@@ -16,7 +16,6 @@ from .constants import HELP_SHORT_TEXT, NO_ARGS_TEXT
 from .ipaddr import get_net_size, is_valid_ip_addr
 from .whois import get_ip_whois, get_whois
 
-
 NO_WHOIS_MSG = "No whois data"
 """Message printed to stderr when :func:`get_whois` returns
 ``None``.

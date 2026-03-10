@@ -16,7 +16,6 @@ from valkyrie_tools.whobe import (
 
 from .test_base_command import BaseCommandTest
 
-
 whois_keys = [
     "domain_name",
     "registrar",

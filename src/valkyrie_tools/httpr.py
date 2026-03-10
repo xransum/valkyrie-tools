@@ -11,7 +11,6 @@ from bs4 import BeautifulSoup
 from bs4.element import Tag
 from requests import Response
 
-
 # Suppress insecure request warnings
 urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
 

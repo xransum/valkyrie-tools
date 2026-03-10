@@ -3,17 +3,18 @@
 import re
 from typing import List, Tuple
 
+import dns.exception
 import dns.inet
 import dns.name
 import dns.query
 import dns.rdatatype
 import dns.resolver
+import dns.reversename
 import dns.tsig
 import dns.tsigkeyring
 import dns.update
 
 from .ipaddr import is_valid_ip_addr
-
 
 Timeout = dns.resolver.Timeout
 DEFAULT_NAMESERVERS = [
@@ -76,7 +77,7 @@ def is_valid_record_type(record_type: str) -> bool:
         False
     """
     try:
-        return dns.rdatatype.from_text(record_type) is not None  # type: ignore[no-untyped-call]
+        return dns.rdatatype.from_text(record_type) is not None
 
     except (dns.rdatatype.UnknownRdatatype, AttributeError):
         return False
@@ -98,13 +99,13 @@ def get_rdns_record(ipaddr: str) -> List[Tuple[str, str]]:
         raise ValueError(f"Invalid IP address: {ipaddr}")
 
     # Configure DNS resolver with default name servers
-    resolver = dns.resolver.Resolver(configure=False)  # type: ignore[no-untyped-call]
+    resolver = dns.resolver.Resolver(configure=False)
     resolver.nameservers = DEFAULT_NAMESERVERS
     resolver.search = []
 
     try:
         # Retrieve reverse DNS records for the IP address
-        records = resolver.resolve(dns.reversename.from_address(ipaddr), "PTR")  # type: ignore[no-untyped-call]
+        records = resolver.resolve(dns.reversename.from_address(ipaddr), "PTR")
         return [(record.rdtype.name, record.to_text()) for record in records]
     except (
         dns.exception.SyntaxError,
@@ -143,7 +144,7 @@ def get_dns_record(
         raise ValueError(f"Invalid record type: {record_type}")
 
     # Configure DNS resolver with default name servers
-    resolver = dns.resolver.Resolver(configure=False)  # type: ignore[no-untyped-call]
+    resolver = dns.resolver.Resolver(configure=False)
     resolver.nameservers = nameservers
     resolver.search = []
 
@@ -154,7 +155,7 @@ def get_dns_record(
     else:
         try:
             # Retrieve DNS records for the domain
-            records = resolver.resolve(domain, record_type)  # type: ignore[no-untyped-call]  # noqa: B950
+            records = resolver.resolve(domain, record_type)  # noqa: B950
             for record in records:
                 type_name = record.rdtype.name
                 value = record.to_text()

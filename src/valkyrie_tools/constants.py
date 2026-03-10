@@ -8,7 +8,6 @@ addresses, e-mail addresses, and URLs from arbitrary text.
 
 import re
 
-
 __all__ = [
     "HELP_SHORT_TEXT",
     "NO_ARGS_TEXT",

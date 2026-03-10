@@ -28,7 +28,6 @@ from .exceptions import (
 )
 from .httpr import build_redirect_chain, filter_headers, get_http_version_text
 
-
 # Initialize global variables
 HEADER_KEY_TRUNC_LENGTH = 70
 """Maximum character length for header values before they are truncated.

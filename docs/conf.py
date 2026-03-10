@@ -2,7 +2,6 @@
 
 from datetime import datetime
 
-
 project = "valkyrie-tools"
 author = "Kevin Haas"
 copyright = f"{datetime.now().year}, {author}"

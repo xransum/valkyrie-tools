@@ -22,7 +22,7 @@ class BaseCommandTest(unittest.TestCase):
 
     # Overridden in subclasses; typed Optional so mypy accepts the class-level
     # default while subclasses set it to a real click.BaseCommand.
-    command: Optional[click.BaseCommand] = None
+    command: Optional[click.Command] = None
 
     def setUp(self) -> None:
         """Set up test fixtures, if any."""
