@@ -6,7 +6,6 @@ import shutil
 import sys
 from pathlib import Path
 from textwrap import dedent
-from typing import Optional
 
 import nox
 from nox_poetry import Session, session
@@ -20,6 +19,7 @@ python_versions = [
     "3.8",
     "3.12",
 ]
+
 nox.needs_version = ">= 2021.6.6"
 nox.options.sessions = (
     "pre-commit",
@@ -150,7 +150,9 @@ def safety(session: Session) -> None:
     if os.path.exists(".safety") is True:
         with open(".safety", encoding="utf-8") as f:
             lines = [
-                line.strip() for line in f.readlines() if line.strip() != ""
+                line.strip()
+                for line in f.readlines()
+                if line.strip() != "" and not line.strip().startswith("#")
             ]
             if len(lines) > 0:
                 vulns = ",".join(lines)
@@ -181,30 +183,17 @@ def mypy(session: Session) -> None:
         )
 
 
-@session
-@nox.parametrize(
-    "python,poetry",
-    [
-        (python_versions[0], "1.0.10"),
-        *((python, None) for python in python_versions),
-    ],
-)
-def tests(session: Session, poetry: Optional[str]) -> None:
+@session(python=python_versions)
+def tests(session: Session) -> None:
     """Run the test suite."""
     session.install(".")
     session.install(
         "coverage[toml]",
-        "poetry",
         "pytest",
         "pytest-datadir",
         "pygments",
         "typing_extensions",
     )
-
-    if poetry is not None:
-        session.run_always(
-            "python", "-m", "pip", "install", f"poetry=={poetry}", silent=True
-        )
 
     try:
         session.run(

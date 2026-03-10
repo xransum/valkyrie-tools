@@ -1,22 +1,48 @@
+# dnspython: CVE-2023-29483 -- ipwhois pins dnspython <=2.0.0, cannot upgrade
 65401
-66710
-70612
-75625
-76170
-76752
-77319
-77744
-77745
-79756
-80401
-81132
-82331
+
+# The following IDs relate to Python 3.8-only lower-version entries in the
+# lock file. All >=3.9 versions are patched. These cannot be fixed without
+# dropping Python 3.8 support.
+
+# urllib3: CVE-2025-66471, CVE-2025-50182, CVE-2025-50181, CVE-2025-66418, CVE-2026-21441
+# Affects urllib3 <2.5.0/2.6.0/2.6.3 -- Python 3.8 lock entry is 2.2.3
 82332
+77745
+77744
+82331
+84031
+
+# filelock: CVE-2025-68146, PVE-2026-84183, CVE-2026-22701
+# Affects filelock <3.20.x -- Python 3.8/3.9 lock entries are 3.16.1 and 3.19.1
 82754
-83159
-84339
 84183
 84415
-84031
-84416
-84183
+
+# authlib: CVE-2025-59420, CVE-2025-62706, CVE-2025-61920, CVE-2025-68158
+# Affects authlib <1.6.4/1.6.5/1.6.6 -- Python 3.8 lock entry is 1.3.2
+79756
+81132
+80401
+84339
+
+# marshmallow: CVE-2025-68480
+# Affects marshmallow <3.26.2 and <4.1.2 -- Python 3.8/3.9 lock entries
+83159
+
+# tornado: CVE-2025-47287
+# Affects tornado <6.5.0 -- Python 3.8 lock entry is 6.4.2
+77319
+
+# setuptools: CVE-2025-47273
+# Affects setuptools <78.1.1 -- Python 3.8 lock entry is 75.3.4
+76752
+
+# cryptography: CVE-2024-12797
+# Affects cryptography 42.0.0-44.0.0 -- Python 3.8 lock entry is 43.0.3
+# (cryptography 44+ requires cffi 2.0 which requires Python >=3.9)
+76170
+
+# regex: PVE-2025-78558
+# Affects regex <2025.2.10 -- new finding from black/pyupgrade dependency
+78558
