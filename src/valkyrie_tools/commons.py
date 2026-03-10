@@ -118,6 +118,9 @@ def print_version(version: str) -> Callable[..., None]:
         Callable: Click callback function.
     """
 
+    if not version:
+        raise TypeError("version must be a non-empty string")
+
     def echo_version(
         ctx: click.Context,
         param: click.Option | click.Parameter,  # noqa: B008
