@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "valkyrie-tools"
-version = "1.4.1"
+version = "1.4.2"
 description = "Valkyrie Tools"
 authors = ["xransum <xransum@users.noreply.github.com>"]
 license = "MIT"
