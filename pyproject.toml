@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "valkyrie-tools"
-version = "1.4.2"
+version = "1.5.0"
 description = "Valkyrie Tools"
 authors = ["xransum <xransum@users.noreply.github.com>"]
 license = "MIT"
@@ -14,15 +14,15 @@ classifiers = [
     "Programming Language :: Python :: 3.10",
     "Programming Language :: Python :: 3.11",
     "Programming Language :: Python :: 3.12",
+    "Programming Language :: Python :: 3.13",
+    "Programming Language :: Python :: 3.14",
 ]
 
 [tool.poetry.urls]
 Changelog = "https://github.com/xransum/valkyrie-tools/releases"
 
 [tool.poetry.dependencies]
-# Dumb, but can't go with 3.12+ due to the drop of imp in 3.12 and
-# the fact whois depends on it.
-# https://docs.python.org/3.12/whatsnew/3.12.html#removed-modules
+# python-whois 0.9.x dropped the imp dependency, so 3.12+ is now supported.
 python = ">=3.8,<4.0"
 nox = ">=2020.8.22"
 tomlkit = ">=0.7"
