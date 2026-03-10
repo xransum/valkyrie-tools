@@ -1,0 +1,32 @@
+name: Close Stale Dependabot PRs
+
+on:
+  schedule:
+    - cron: "0 0 * * *"
+  workflow_dispatch:
+
+jobs:
+  stale:
+    runs-on: ubuntu-latest
+    permissions:
+      pull-requests: write
+    steps:
+      - uses: actions/stale@v9
+        with:
+          days-before-pr-stale: 14
+          days-before-pr-close: 7
+          stale-pr-label: stale
+          stale-pr-message: >
+            This Dependabot PR has been open for 14 days with no activity and is
+            being marked as stale. It will be closed in 7 days if there is no
+            further activity.
+          close-pr-message: >
+            Closing this Dependabot PR due to inactivity. Dependabot will reopen
+            it when the dependency update is still relevant.
+          only-pr-labels: ""
+          any-of-pr-labels: ""
+          operations-per-run: 30
+          only-labels: ""
+          exempt-pr-labels: "pinned,security"
+          filter-only-assigned: false
+          filter-only-milestoned: false
