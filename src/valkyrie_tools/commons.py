@@ -117,7 +117,6 @@ def print_version(version: str) -> Callable[..., None]:
     Returns:
         Callable: Click callback function.
     """
-
     if not version:
         raise TypeError("version must be a non-empty string")
 
