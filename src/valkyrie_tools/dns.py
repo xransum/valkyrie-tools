@@ -14,7 +14,6 @@ import dns.update
 
 from .ipaddr import is_valid_ip_addr
 
-
 Timeout = dns.resolver.Timeout
 DEFAULT_NAMESERVERS = [
     "1.1.1.1",

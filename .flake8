@@ -7,5 +7,6 @@ docstring-convention = google
 per-file-ignores =
     tests/*:S101,
     src/**/*.py:RST213,RST210,
+    noxfile.py:D,N,
 rst-roles = attr,class,const,data,func,meth,mod,ref
 rst-directives = deprecated

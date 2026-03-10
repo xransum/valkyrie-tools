@@ -87,8 +87,7 @@ class TestPrintVersion(unittest.TestCase):
         param = click.Option(["--version"])
         value = "value"
         with self.assertRaises(click.exceptions.Exit):
-            result = callback(ctx, param, value)
-            self.assertIn(version, result)  # type: ignore[arg-type]
+            callback(ctx, param, value)
 
     def test_print_version_without_value(self) -> None:
         """Test that function does not print version string and exits."""
@@ -106,8 +105,7 @@ class TestPrintVersion(unittest.TestCase):
         """Test that function raises an exception."""
         version = ""
         with self.assertRaises(TypeError):
-            callback = print_version(version)
-            self.assertEqual(callback(), version)
+            print_version(version)
 
     def test_print_version_with_no_param(self) -> None:
         """Test that function raises an exception."""
@@ -118,8 +116,7 @@ class TestPrintVersion(unittest.TestCase):
         value = "value"
 
         with self.assertRaises(click.exceptions.Exit):
-            result = callback(ctx, param, value)
-            self.assertEqual(result, version)
+            callback(ctx, param, value)
 
 
 class TestHandleFileInput(unittest.TestCase):

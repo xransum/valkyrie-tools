@@ -24,7 +24,6 @@ from valkyrie_tools.urlcheck import (
 
 from .test_base_command import BaseCommandTest
 
-
 META_HTML = (
     '<html><head><meta http-equiv="refresh" content="0; URL=%s"></head></html>'
 )

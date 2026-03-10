@@ -35,7 +35,6 @@ except PackageNotFoundError:  # pragma: no cover
 
 from .config import Config
 
-
 configs = Config(
     __appname__,
     defaults={

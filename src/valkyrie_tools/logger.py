@@ -11,7 +11,6 @@ by the verbosity mapper (:data:`log_levels`).
 
 import logging
 
-
 __all__ = [
     "logging",
     "log_message_format",

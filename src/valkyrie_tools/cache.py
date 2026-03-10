@@ -17,7 +17,6 @@ from math import floor
 from time import time
 from typing import Any, Callable, Dict, Generator, Tuple, TypeVar
 
-
 _F = TypeVar("_F", bound=Callable[..., Any])
 
 

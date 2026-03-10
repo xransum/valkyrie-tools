@@ -21,7 +21,6 @@ from valkyrie_tools.httpr import (
     make_request,
 )
 
-
 META_REFRESH_HTML = '<html><head><meta http-equiv="refresh" content="0;URL=\'%s\'" /> </head></html>'  # noqa: B950
 
 

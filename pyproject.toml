@@ -41,7 +41,7 @@ art = "^6.1"
 appdirs = "^1.4.4"
 validators = "^0.22.0"
 
-[tool.poetry.dev-dependencies]
+[tool.poetry.group.dev.dependencies]
 pytest = ">=6.2.5"
 coverage = { extras = ["toml"], version = ">=6.3" }
 safety = ">=1.10.3"
@@ -116,7 +116,6 @@ line-length = 80
 [tool.isort]
 profile = "black"
 line_length = 80
-lines_after_imports = 2
 
 [tool.safety]
 ignore = ["CVE-2023-29483"]

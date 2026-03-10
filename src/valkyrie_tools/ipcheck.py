@@ -19,7 +19,6 @@ from .commons import (
 from .constants import HELP_SHORT_TEXT, NO_ARGS_TEXT
 from .ipaddr import get_ip_info, is_private_ip
 
-
 PRIVATE_IP_SKIP_MESSAGE = "Skipped, private ip address."
 """Message printed when an IP address falls within
 :data:`~valkyrie_tools.ipaddr.PRIVATE_IP_CIDR_RANGES`.

@@ -30,7 +30,6 @@ from .constants import (
 )
 from .files import is_binary_file
 
-
 __all__ = [
     "common_options",
     "emit_json",

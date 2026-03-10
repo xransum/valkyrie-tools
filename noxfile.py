@@ -10,7 +10,6 @@ from textwrap import dedent
 import nox
 from nox_poetry import Session, session
 
-
 package = "valkyrie_tools"
 python_versions = [
     "3.11",
