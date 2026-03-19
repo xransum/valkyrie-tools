@@ -37,13 +37,13 @@ jobs:
         uses: salsify/action-detect-and-tag-new-version@v2.0.3
         with:
           version-command: |
-            python -c "import tomllib; f=open('pyproject.toml','rb'); d=tomllib.load(f); print(d['project']['version'])"
+            python -c "import tomllib; d=tomllib.load(open('pyproject.toml','rb')); print(d.get('project',d.get('tool',{}).get('poetry',{})).get('version','0.0.0'))"
 
       - name: Bump version for developmental release
         if: "! steps.check-version.outputs.tag"
         run: |
           uv version patch
-          version=$(python -c "import tomllib; f=open('pyproject.toml','rb'); d=tomllib.load(f); print(d['project']['version'])")
+          version=$(python -c "import tomllib; d=tomllib.load(open('pyproject.toml','rb')); print(d.get('project',d.get('tool',{}).get('poetry',{})).get('version','0.0.0'))")
           uv version "${version}.dev.$(date +%s)"
 
       - name: Build package
