@@ -2,19 +2,19 @@
 
 ## Requirements
 
-This project uses **pyenv** for managing Python versions and **Poetry** for
+This project uses **pyenv** for managing Python versions and **uv** for
 dependency management.
 
 - Install pyenv: https://github.com/pyenv/pyenv#installation
-  - Supported Python versions: `>=3.8,<=3.12`
-- Install Poetry: https://python-poetry.org/docs/#installation
+  - Supported Python versions: `>=3.8,<4.0`
+- Install uv: https://docs.astral.sh/uv/getting-started/installation/
 
 Project setup:
 
 ```bash
 pyenv install <python-version>
 pyenv local <python-version>
-poetry install
+uv sync
 ```
 
 ## Versioning
@@ -27,18 +27,18 @@ This project follows [Semantic Versioning](https://semver.org/) (`MAJOR.MINOR.PA
 | `MINOR` | Backward-compatible new feature or capability                        | `1.3.1` -> `1.4.0` |
 | `PATCH` | Backward-compatible bug fix, dependency update, or internal refactor | `1.3.1` -> `1.3.2` |
 
-Use `poetry version` to bump the version in `pyproject.toml`:
+Use `uv version` to bump the version in `pyproject.toml`:
 
 ```bash
-poetry version patch   # 1.3.1 -> 1.3.2
-poetry version minor   # 1.3.1 -> 1.4.0
-poetry version major   # 1.3.1 -> 2.0.0
+uv version patch   # 1.3.1 -> 1.3.2
+uv version minor   # 1.3.1 -> 1.4.0
+uv version major   # 1.3.1 -> 2.0.0
 ```
 
 Or set an explicit version:
 
 ```bash
-poetry version 1.5.0
+uv version 1.5.0
 ```
 
 Bump the version as part of the same commit that introduces the change.
@@ -49,13 +49,13 @@ The CI release workflow (`release.yml`) detects the new version tag on push to
 ## Security Scan
 
 The `safety` nox session exports the resolved dependency set from
-`poetry.lock` and runs `safety check` against it. Any detected vulnerability
+`uv.lock` and runs `safety check` against it. Any detected vulnerability
 causes the session and CI to fail.
 
 ### Running the scan
 
 ```bash
-poetry run nox -s safety
+uv run nox -s safety
 ```
 
 Run this session any time you add, remove, or update a dependency. It runs
@@ -78,7 +78,7 @@ A failing scan prints a table like:
 Each row gives you:
 
 - **package** - the name of the vulnerable package
-- **installed** - the version currently locked in `poetry.lock`
+- **installed** - the version currently locked in `uv.lock`
 - **affected** - the version range that contains the vulnerability
 - **ID** - the Safety vulnerability ID (e.g. `12345`)
 
@@ -88,7 +88,7 @@ Check whether a patched version exists and is compatible:
 
 ```bash
 # See all available versions of the package
-poetry show somepackage
+uv tree --package somepackage
 
 # Or check PyPI directly
 pip index versions somepackage
@@ -98,29 +98,29 @@ If a safe version exists within the constraints in `pyproject.toml`, update
 the lock file:
 
 ```bash
-poetry update somepackage
+uv lock --upgrade-package somepackage
 ```
 
 Then re-run the scan to confirm it is resolved:
 
 ```bash
-poetry run nox -s safety
+uv run nox -s safety
 ```
 
 ### Tracing transitive vulnerabilities
 
 If the vulnerable package is not a direct dependency (i.e. it does not appear
-in `pyproject.toml`) use Poetry's dependency tree to find what pulls it in:
+in `pyproject.toml`) use uv's dependency tree to find what pulls it in:
 
 ```bash
-poetry show --tree | grep -B 10 somepackage
+uv tree | grep -B 10 somepackage
 ```
 
 Options once you identify the parent:
 
 1. **Update the parent** - if a newer version of the parent ships with a
-   patched transitive dep, update it: `poetry update <parent-package>`
-2. **Pin the transitive dep directly** - add it to `[tool.poetry.dependencies]`
+   patched transitive dep, update it: `uv lock --upgrade-package <parent-package>`
+2. **Pin the transitive dep directly** - add it to `[project.dependencies]`
    with a safe version constraint as an override
 3. **Suppress it** - only if the vulnerability is genuinely not exploitable in
    this project's context (see below)
@@ -130,7 +130,7 @@ Options once you identify the parent:
 `.safety` is strictly for two categories of violations:
 
 1. **Dev-only dependencies** - packages listed under
-   `[tool.poetry.dev-dependencies]` in `pyproject.toml` that are never
+   `[dependency-groups]` in `pyproject.toml` that are never
    installed in a user environment (e.g. `pytest`, `black`, `nox`, `sphinx`).
    A vulnerability in a dev tool poses no risk to end users.
 
@@ -139,7 +139,7 @@ Options once you identify the parent:
    database entry is a known false positive with upstream confirmation.
 
 If a vulnerability is in a **runtime dependency** (anything under
-`[tool.poetry.dependencies]`) and a fix is available, it must be fixed, not
+`[project.dependencies]`) and a fix is available, it must be fixed, not
 suppressed.
 
 To suppress an eligible violation, add the Safety ID (the integer, one per
@@ -163,30 +163,30 @@ All contributions must pass the full nox suite before a PR can be merged. Run
 the default sessions with:
 
 ```bash
-poetry run nox
+uv run nox
 ```
 
-This runs, in order: `pre-commit`, `safety`, `tests`, `xdoctest`, `docs-build`.
+This runs, in order: `pre-commit`, `safety`, `mypy`, `tests`, `xdoctest`, `docs-build`.
 
 ### Session reference
 
-| Session      | Command                        | What it checks                                                                        | When to run                                                                      |
-| ------------ | ------------------------------ | ------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------- |
-| `pre-commit` | `poetry run nox -s pre-commit` | Formatting (black, isort), linting (flake8), docstring style (darglint), file hygiene | Before every commit; always run before pushing                                   |
-| `safety`     | `poetry run nox -s safety`     | Known CVEs in runtime dependencies                                                    | Whenever dependencies change in `pyproject.toml` or `poetry.lock`                |
-| `tests`      | `poetry run nox -s tests`      | Pytest suite across all supported Pythons (3.8-3.12) + Poetry 1.0.10 compat           | After any logic change to `src/` or `tests/`                                     |
-| `coverage`   | `poetry run nox -s coverage`   | Aggregated coverage report; fails if below 100%                                       | After running `tests`; run to see which lines are uncovered                      |
-| `mypy`       | `poetry run nox -s mypy`       | Static type checking (not in default suite)                                           | When adding or changing type annotations; run manually to confirm no regressions |
-| `typeguard`  | `poetry run nox -s typeguard`  | Runtime type checking via Typeguard                                                   | When adding new public functions or changing call signatures                     |
-| `xdoctest`   | `poetry run nox -s xdoctest`   | `Example:` blocks in docstrings execute without error                                 | After adding or modifying docstring `Example:` blocks                            |
-| `docs-build` | `poetry run nox -s docs-build` | Sphinx build - must produce zero warnings                                             | After any change to `docs/` or public API docstrings                             |
-| `docs`       | `poetry run nox -s docs`       | Live-reload docs server for local review                                              | During active docs writing; not part of CI                                       |
+| Session      | Command                    | What it checks                                                                        | When to run                                                                      |
+| ------------ | -------------------------- | ------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------- |
+| `pre-commit` | `uv run nox -s pre-commit` | Formatting (black, isort), linting (flake8), docstring style (darglint), file hygiene | Before every commit; always run before pushing                                   |
+| `safety`     | `uv run nox -s safety`     | Known CVEs in runtime dependencies                                                    | Whenever dependencies change in `pyproject.toml` or `uv.lock`                    |
+| `tests`      | `uv run nox -s tests`      | Pytest suite across all supported Pythons (3.8-3.14)                                  | After any logic change to `src/` or `tests/`                                     |
+| `coverage`   | `uv run nox -s coverage`   | Aggregated coverage report; fails if below 100%                                       | After running `tests`; run to see which lines are uncovered                      |
+| `mypy`       | `uv run nox -s mypy`       | Static type checking (not in default suite)                                           | When adding or changing type annotations; run manually to confirm no regressions |
+| `typeguard`  | `uv run nox -s typeguard`  | Runtime type checking via Typeguard                                                   | When adding new public functions or changing call signatures                     |
+| `xdoctest`   | `uv run nox -s xdoctest`   | `Example:` blocks in docstrings execute without error                                 | After adding or modifying docstring `Example:` blocks                            |
+| `docs-build` | `uv run nox -s docs-build` | Sphinx build - must produce zero warnings                                             | After any change to `docs/` or public API docstrings                             |
+| `docs`       | `uv run nox -s docs`       | Live-reload docs server for local review                                              | During active docs writing; not part of CI                                       |
 
 When to run the full suite vs. individual sessions:
 
 - **Iterating locally** - run only the session relevant to the change (e.g.
   `pre-commit` after formatting edits, `tests` after logic changes).
-- **Before pushing a branch** - run the full suite (`poetry run nox`) to catch
+- **Before pushing a branch** - run the full suite (`uv run nox`) to catch
   anything CI will reject.
 - **After adding dependencies** - always run `safety` in addition to `tests`.
 - **mypy and typeguard** are not in the default suite; run them manually when
@@ -195,11 +195,11 @@ When to run the full suite vs. individual sessions:
 ### Pinning to a single Python version
 
 The default suite runs `tests`, `xdoctest`, `mypy`, and `typeguard` across all
-supported Python versions (3.8-3.12), which is the full CI matrix. During local
+supported Python versions (3.8-3.14), which is the full CI matrix. During local
 iteration you can restrict the entire suite to one interpreter with `-p`:
 
 ```bash
-poetry run nox -p 3.11
+uv run nox -p 3.11
 ```
 
 This runs every default session but only for Python 3.11, cutting out the
@@ -209,7 +209,7 @@ virtualenv for the quickest feedback loop.
 The `-p` flag works with individual sessions too:
 
 ```bash
-poetry run nox -s tests -p 3.11
+uv run nox -s tests -p 3.11
 ```
 
 ## Pre-commit Hooks
@@ -217,13 +217,13 @@ poetry run nox -s tests -p 3.11
 Install the hooks once after cloning so they run automatically on `git commit`:
 
 ```bash
-poetry run pre-commit install
+uv run pre-commit install
 ```
 
 To run all hooks against every file manually (same as the nox `pre-commit` session):
 
 ```bash
-poetry run pre-commit run --all-files --hook-stage=manual
+uv run pre-commit run --all-files --hook-stage=manual
 ```
 
 The active hooks are:
@@ -247,8 +247,8 @@ The active hooks are:
 Run both manually:
 
 ```bash
-poetry run black src tests
-poetry run isort src tests
+uv run black src tests
+uv run isort src tests
 ```
 
 ### Linting (flake8)
@@ -260,7 +260,7 @@ Maximum cyclomatic complexity: **10**
 Run manually:
 
 ```bash
-poetry run flake8 src tests
+uv run flake8 src tests
 ```
 
 Key plugins and what they enforce:
@@ -346,7 +346,7 @@ strict_equality = true
 Run mypy manually:
 
 ```bash
-poetry run mypy src tests docs/conf.py
+uv run mypy src tests docs/conf.py
 ```
 
 > **Note**: mypy is not in the default nox session list; it is gated separately
@@ -358,18 +358,18 @@ poetry run mypy src tests docs/conf.py
 Tests live in `tests/` and use pytest. Run them for the current Python version:
 
 ```bash
-poetry run pytest
+uv run pytest
 ```
 
 With coverage:
 
 ```bash
-poetry run coverage run -m pytest
-poetry run coverage report
+uv run coverage run -m pytest
+uv run coverage report
 ```
 
 The nox `tests` session runs the suite across all supported Python versions
-(3.8-3.12). If you only need to check one version locally, `pytest` directly
+(3.8-3.14). If you only need to check one version locally, `pytest` directly
 is sufficient during development.
 
 ## GitHub CLI
@@ -571,7 +571,7 @@ Naming conventions:
 Run the full nox suite before pushing:
 
 ```bash
-poetry run nox
+uv run nox
 ```
 
 Fix any failures before continuing.
@@ -581,9 +581,9 @@ Fix any failures before continuing.
 If the change warrants a release, bump the version in `pyproject.toml`:
 
 ```bash
-poetry version patch   # bug fix or dependency update
-poetry version minor   # new backward-compatible feature
-poetry version major   # breaking change
+uv version patch   # bug fix or dependency update
+uv version minor   # new backward-compatible feature
+uv version major   # breaking change
 ```
 
 Commit the version bump together with the change, not as a separate commit.
@@ -681,8 +681,8 @@ Use the same naming conventions as internal contributors (`feature/*`,
 Install dependencies and run the full nox suite:
 
 ```bash
-poetry install
-poetry run nox
+uv sync
+uv run nox
 ```
 
 Fix any failures before continuing.
@@ -690,9 +690,9 @@ Fix any failures before continuing.
 #### 5. Bump the version (if applicable)
 
 ```bash
-poetry version patch   # bug fix or dependency update
-poetry version minor   # new backward-compatible feature
-poetry version major   # breaking change
+uv version patch   # bug fix or dependency update
+uv version minor   # new backward-compatible feature
+uv version major   # breaking change
 ```
 
 #### 6. Commit

@@ -46,38 +46,15 @@ jobs:
         with:
           python-version: ${{ matrix.python }}
 
-      - name: Upgrade Pip
-        run: |
-          pip install --constraint="${{ github.workspace }}/.github/workflows/constraints.txt" pip
-          pip --version
-
-      - name: Upgrade Pip in Virtual Environments
-        shell: python
-        run: |
-          import os
-          import pip
-
-          with open(os.environ["GITHUB_ENV"], mode="a") as io:
-              print(f"VIRTUALENV_PIP={pip.__version__}", file=io)
-
-      - name: Install Poetry
-        run: |
-          pipx install --pip-args=--constraint="${{ github.workspace }}/.github/workflows/constraints.txt" poetry
-          poetry --version
-
-      - name: Install Poetry Export Plugin
-        run: |
-          pipx inject poetry poetry-plugin-export
-          poetry self show plugins
+      - name: Install uv
+        uses: astral-sh/setup-uv@v5
+        with:
+          version: "0.10.4"
 
       - name: Install Nox
         run: |
-          pipx install --pip-args=--constraint="${{ github.workspace }}/.github/workflows/constraints.txt" nox
+          uv tool install --with uv "nox==$(grep '^nox==' .github/workflows/constraints.txt | cut -d= -f3)"
           nox --version
-
-      - name: Install Nox Poetry
-        run: |
-          pipx inject nox nox-poetry
 
       - name: Compute pre-commit cache key
         if: matrix.session == 'pre-commit'
@@ -136,34 +113,20 @@ jobs:
         with:
           python-version: "3.11"
 
-      - name: Upgrade Pip
-        run: |
-          pip install --constraint="${{ github.workspace }}/.github/workflows/constraints.txt" pip
-          pip --version
-
-      - name: Install Poetry
-        run: |
-          pipx install --pip-args=--constraint="${{ github.workspace }}/.github/workflows/constraints.txt" poetry
-          poetry --version
-
-      - name: Install Poetry Export Plugin
-        run: |
-          pipx inject poetry poetry-plugin-export
-          poetry self show plugins
+      - name: Install uv
+        uses: astral-sh/setup-uv@v5
+        with:
+          version: "0.10.4"
 
       - name: Install Nox
         run: |
-          pipx install --pip-args=--constraint="${{ github.workspace }}/.github/workflows/constraints.txt" nox
+          uv tool install --with uv "nox==$(grep '^nox==' .github/workflows/constraints.txt | cut -d= -f3)"
           nox --version
-
-      - name: Install Nox Poetry
-        run: |
-          pipx inject nox nox-poetry
 
       - name: Download coverage data
         uses: actions/download-artifact@v4
         with:
-          # Use pattern since articaft name is dynamic
+          # Use pattern since artifact name is dynamic
           pattern: coverage-data-*
           path: .coverage.*
           merge-multiple: true
