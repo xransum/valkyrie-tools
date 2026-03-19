@@ -28,7 +28,7 @@ class TestGetWhois(unittest.TestCase):
         """Test get_whois failure to retrieve whois information."""
         # Arrange
         mock_value = "example.com"
-        mock_whois.side_effect = whois.WhoisError
+        mock_whois.side_effect = whois.parser.PywhoisError
         # Act
         result = get_whois(mock_value)
         # Assert

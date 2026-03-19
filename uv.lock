@@ -3519,14 +3519,14 @@ wheels = [
 
 [[package]]
 name = "python-whois"
-version = "0.9.6"
+version = "0.9.5"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
     { name = "python-dateutil" },
 ]
-sdist = { url = "https://files.pythonhosted.org/packages/f1/0c/537914eca91ee5ff281309a5ca71da23c0c975cd6658668a44d3fdcf1cc4/python_whois-0.9.6.tar.gz", hash = "sha256:2e6de7b6d70e305a85f4859cd17781ee3f0da3a02a8e94f23cb4cdcd2e400bfa", size = 125107, upload-time = "2025-10-07T04:36:14.913Z" }
+sdist = { url = "https://files.pythonhosted.org/packages/f5/5b/5c0c705d14945954b23b69042c1597971da3cd6dc3ed23b96449be91d665/python_whois-0.9.5.tar.gz", hash = "sha256:18968c21484752fcc4b9a5f0af477ef6b8dc2e8bb7f1bd5c33831499c0dd41ca", size = 111201, upload-time = "2024-11-17T08:26:22.862Z" }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/46/53/d0ceb3ae30da8e8ec2d9af11050178f3b4114d5aa6a7f7074199db3c806f/python_whois-0.9.6-py3-none-any.whl", hash = "sha256:153261941a4d238b1278a4ca9b5b5e0590ed3b4d0c534ba111c4434d5d339410", size = 116976, upload-time = "2025-10-07T04:36:12.328Z" },
+    { url = "https://files.pythonhosted.org/packages/be/7b/6a5ee6895b1bffb630da9c1a472ced41f537f2700f76e69bd62e01776e1b/python_whois-0.9.5-py3-none-any.whl", hash = "sha256:d435cf8012659745ce3b4e7c15428df9405648696727812d9eaacc36782d14e3", size = 104155, upload-time = "2024-11-17T08:26:20.858Z" },
 ]
 
 [[package]]
@@ -5617,7 +5617,7 @@ requires-dist = [
     { name = "ipwhois", specifier = ">=1.2.0" },
     { name = "packaging", specifier = ">=20.9" },
     { name = "pexpect", specifier = ">=4.8.0" },
-    { name = "python-whois", specifier = ">=0.8.0" },
+    { name = "python-whois", specifier = ">=0.8.0,<0.9.6" },
     { name = "sphinx-click", specifier = ">=5.0.1" },
     { name = "sphinx-rtd-theme", specifier = ">=1.3.0" },
     { name = "tomlkit", specifier = ">=0.7" },

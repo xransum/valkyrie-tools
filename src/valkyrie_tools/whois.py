@@ -38,7 +38,7 @@ def get_whois(
         Optional[Union[whois.parser.WhoisCom, whois.parser.WhoisEntry]]:
         A parsed WHOIS record on success, or ``None`` if the domain could not
         be resolved or the WHOIS service returned an error
-        (:class:`whois.WhoisError` is caught silently).
+        (:class:`whois.parser.PywhoisError` is caught silently).
 
     Example:
         >>> from valkyrie_tools.whois import get_whois
@@ -57,7 +57,7 @@ def get_whois(
                 break
 
             sleep(0.25 * attempts)
-    except whois.WhoisError:
+    except whois.parser.PywhoisError:
         w = None
 
     return w
