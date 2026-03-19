@@ -42,7 +42,7 @@ jobs:
       - name: Bump version for developmental release
         if: "! steps.check-version.outputs.tag"
         run: |
-          uv version patch
+          uv version --bump patch
           version=$(python -c "import tomllib; d=tomllib.load(open('pyproject.toml','rb')); print(d.get('project',d.get('tool',{}).get('poetry',{})).get('version','0.0.0'))")
           uv version "${version}.dev.$(date +%s)"
 
