@@ -1,6 +1,6 @@
 [project]
 name = "valkyrie-tools"
-version = "1.5.0"
+version = "1.5.1"
 description = "Valkyrie Tools"
 authors = [{ name = "xransum", email = "xransum@users.noreply.github.com" }]
 license = { text = "MIT" }
