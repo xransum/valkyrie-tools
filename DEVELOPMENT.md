@@ -212,6 +212,53 @@ The `-p` flag works with individual sessions too:
 uv run nox -s tests -p 3.11
 ```
 
+### Session logs
+
+Every nox invocation tees its full stdout and stderr (installs, child
+commands, and nox's own output) to a repo-local log file:
+
+```
+etc/logs/nox.log
+```
+
+`nox.log` always reflects the most recent invocation. When a new invocation
+starts, the previous `nox.log` is renamed using its first session's start
+timestamp and gzip-compressed in place:
+
+```
+etc/logs/nox.log                         # current invocation (active)
+etc/logs/nox-20260503T151822Z.log.gz     # previous invocations (archived)
+etc/logs/nox-20260503T143901Z.log.gz
+...
+```
+
+Up to 10 archives are retained; older ones are pruned automatically. The
+`etc/logs/` directory is gitignored.
+
+Terminal colors are preserved on interactive runs via a pseudo-terminal, but
+ANSI escape sequences and carriage returns are stripped from the log file so
+it stays clean for `grep`, `less`, and editors.
+
+Each session block inside a log is wrapped with header and footer markers so
+individual sessions are easy to locate:
+
+```
+==== 2026-05-03T14:22:01Z session=tests python=3.11 posargs=[] ====
+... output ...
+==== 2026-05-03T14:23:47Z session=tests python=3.11 status=success duration=106s ====
+```
+
+Useful inspection commands:
+
+```bash
+tail -n 200 etc/logs/nox.log                           # current run
+grep -n 'session=tests' etc/logs/nox.log               # by session
+grep -n 'status=failure' etc/logs/nox.log              # only failures
+zcat etc/logs/nox-20260503T151822Z.log.gz              # any historical run
+zgrep -l 'status=failure' etc/logs/nox-*.log.gz        # failed past runs
+ls -1t etc/logs/nox-*.log.gz | head                    # most recent archives
+```
+
 ## Pre-commit Hooks
 
 Install the hooks once after cloning so they run automatically on `git commit`:
