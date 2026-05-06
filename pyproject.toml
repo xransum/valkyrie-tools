@@ -1,6 +1,6 @@
 [project]
 name = "valkyrie-tools"
-version = "1.5.2"
+version = "1.5.3"
 description = "Valkyrie Tools"
 authors = [{ name = "xransum", email = "xransum@users.noreply.github.com" }]
 license = { text = "MIT" }
@@ -51,7 +51,6 @@ dev = [
     "nox>=2022.11.21",
     "pytest>=6.2.5",
     "coverage[toml]>=6.3",
-    "safety>=1.10.3",
     "mypy>=0.931",
     "typeguard>=2.13.3",
     "xdoctest[colors]>=0.15.10",
@@ -116,9 +115,6 @@ line-length = 80
 [tool.isort]
 profile = "black"
 line_length = 80
-
-[tool.safety]
-ignore = ["CVE-2023-29483"]
 
 [tool.mypy]
 strict = true
