@@ -13,10 +13,7 @@ __appname__ = "valkyrie_tools"
 try:
     from importlib.metadata import PackageNotFoundError, version
 except ImportError:  # pragma: no cover
-    from importlib_metadata import (  # type: ignore[import-not-found,no-redef]
-        PackageNotFoundError,
-        version,
-    )
+    from importlib_metadata import PackageNotFoundError, version  # type: ignore
 
 try:
     __version__ = version(__name__)

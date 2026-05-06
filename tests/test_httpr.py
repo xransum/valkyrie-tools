@@ -371,7 +371,7 @@ class TestBuildRedirectChain(unittest.TestCase):
             if u < len(url_chain) - 1:
                 next_url = url_chain[u + 1]
 
-            mock_url, mock_res = result[u]  # type: ignore[misc]
+            mock_url, mock_res = result[u]  # type: ignore
             self.assertEqual(url, mock_url)
             self.assertEqual(next_url, mock_res.headers.get("Location", None))  # type: ignore
 
@@ -493,7 +493,7 @@ class TestBuildRedirectChain(unittest.TestCase):
             if u < len(url_chain) - 1:
                 next_url = url_chain[u + 1]
 
-            mock_url, mock_res = result[u]  # type: ignore[misc]
+            mock_url, mock_res = result[u]  # type: ignore
             self.assertEqual(url, mock_url)
 
             # TODO: No entirely the best way to test this
