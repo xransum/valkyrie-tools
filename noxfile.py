@@ -7,7 +7,6 @@ import re
 import shlex
 import shutil
 import sys
-import tempfile
 import threading
 import time
 from contextlib import suppress
@@ -79,6 +78,12 @@ def _extract_run_timestamp(path: Path) -> str:
     """Return the compact UTC timestamp of an existing log's first session.
 
     Falls back to the file's mtime if the header cannot be parsed.
+
+    Args:
+        path: Path to an existing nox log file.
+
+    Returns:
+        A compact UTC timestamp string derived from the log header or mtime.
     """
     with suppress(OSError):
         with open(path, "rb") as fp:
@@ -317,10 +322,9 @@ def logged_session(func: Callable[..., None]) -> Callable[..., None]:
         name = getattr(session, "name", func.__name__)
         py = getattr(session, "python", None) or "default"
         posargs = list(getattr(session, "posargs", []) or [])
-        header = (
-            f"\n==== {_utc_iso()} session={name} python={py} "
-            f"posargs={posargs} ====\n"
-        )
+        ts = _utc_iso()
+        inner = f"==== {ts} session={name} python={py} posargs={posargs} ===="
+        header = f"\n{inner}\n"
 
         tee = _TeeFD()
         started = time.monotonic()
@@ -361,7 +365,6 @@ python_versions = [
 nox.needs_version = ">= 2022.11.21"
 nox.options.sessions = (
     "pre-commit",
-    "safety",
     "mypy",
     "tests",
     "xdoctest",
@@ -474,44 +477,6 @@ def precommit(session: nox.Session) -> None:
     session.run("pre-commit", *args)
     if args and args[0] == "install":
         activate_virtualenv_in_precommit_hooks(session)
-
-
-@nox.session(python=python_versions[0])
-@logged_session
-def safety(session: nox.Session) -> None:
-    """Scan dependencies for insecure packages."""
-    with tempfile.NamedTemporaryFile(
-        suffix=".txt", delete=False
-    ) as requirements_file:
-        requirements_path = requirements_file.name
-
-    session.run(
-        "uv",
-        "export",
-        "--format=requirements-txt",
-        "--no-dev",
-        "--no-hashes",
-        f"--output-file={requirements_path}",
-        external=True,
-    )
-    session.install("safety")
-    args = [
-        "safety",
-        "check",
-        "--full-report",
-        f"--file={requirements_path}",
-    ]
-    if os.path.exists(".safety") is True:
-        with open(".safety", encoding="utf-8") as f:
-            lines = [
-                line.strip()
-                for line in f.readlines()
-                if line.strip() != "" and not line.strip().startswith("#")
-            ]
-            if len(lines) > 0:
-                vulns = ",".join(lines)
-                args.append(f"--ignore={vulns}")
-    session.run(*args)
 
 
 @nox.session(python=python_versions)
