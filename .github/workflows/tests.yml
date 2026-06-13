@@ -150,7 +150,7 @@ jobs:
           nox --session=coverage -- xml
 
       - name: Upload Coverage Report
-        uses: codecov/codecov-action@v5
+        uses: codecov/codecov-action@v7
         with:
           token: ${{ secrets.CODECOV_TOKEN }}
           slug: xransum/valkyrie-tools
